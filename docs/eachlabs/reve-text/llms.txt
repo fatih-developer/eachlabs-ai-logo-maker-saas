@@ -1,0 +1,675 @@
+# Reve | Text to Image
+
+> Reve’s text-to-image model creates expressive, high-fidelity visuals that capture every nuance of your prompt with aesthetic precision and realism.
+
+## Model Information
+
+- **Name**: reve-text-to-image
+- **Version**: 0.0.1
+- **Category**: Text to Image
+- **Output Type**: image
+- **Average Response Time**: 15s
+- **Updated**: 10/21/2025
+
+## API Access
+
+- [Interactive Demo](https://www.eachlabs.ai/ai-models/reve-text-to-image) - Try the model with a web interface
+
+
+
+
+
+## API Documentation
+
+### Authentication
+
+All API requests require authentication using your API key. Include your API key in the request headers:
+
+```
+X-API-Key: YOUR_API_KEY
+```
+
+### Base URL
+
+```
+https://api.eachlabs.ai/v1
+```
+
+### Endpoints
+
+#### Create a Prediction
+
+Send a POST request to create a new prediction. This will return a prediction ID that you'll use to check the result.
+
+**Endpoint:** `POST https://api.eachlabs.ai/v1/prediction/`
+
+**Headers:**
+- `X-API-Key: YOUR_API_KEY`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "model": "reve-text-to-image",
+  "version": "0.0.1",
+  "input": {
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+},
+  "webhook_url": ""
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Prediction created successfully",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321"
+}
+```
+
+Use the `predictionID` from this response to poll for results.
+
+#### Get Prediction Result
+
+Poll the prediction endpoint with the predictionID until the result is ready.
+
+**Endpoint:** `GET https://api.eachlabs.ai/v1/prediction/{PREDICTION_ID}`
+
+**Headers:**
+- `X-API-Key: YOUR_API_KEY`
+
+### Code Examples
+
+#### cURL
+
+**Create Prediction:**
+```bash
+curl -X POST \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "model": "reve-text-to-image",
+    "version": "0.0.1",
+    "input": {
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+},
+    "webhook_url": ""
+  }' \
+  https://api.eachlabs.ai/v1/prediction/
+```
+
+**Get Result:**
+```bash
+curl -X GET \
+  -H "X-API-Key: YOUR_API_KEY" \
+  https://api.eachlabs.ai/v1/prediction/{{PREDICTION_ID}}
+```
+
+#### Python
+
+```python
+import requests
+import time
+
+API_KEY = 'YOUR_API_KEY'
+HEADERS = {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json"
+}
+
+def create_prediction():
+    response = requests.post(
+        "https://api.eachlabs.ai/v1/prediction/",
+        headers=HEADERS,
+        json={
+            "model": "reve-text-to-image",
+            "version": "0.0.1",
+            "input": {
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+},
+            "webhook_url": ""
+        }
+    )
+    prediction = response.json()
+    if prediction["status"] != "success":
+        raise Exception(f"Prediction failed: {prediction}")
+    return prediction["predictionID"]
+
+def get_prediction(prediction_id):
+    while True:
+        result = requests.get(
+            f"https://api.eachlabs.ai/v1/prediction/{prediction_id}",
+            headers=HEADERS
+        ).json()
+        
+        if result["status"] == "success":
+            return result
+        elif result["status"] == "error":
+            raise Exception(f"Prediction failed: {result}")
+        
+        time.sleep(1)  # Wait before polling again
+
+# Usage
+try:
+    prediction_id = create_prediction()
+    print(f"Prediction created: {prediction_id}")
+    
+    result = get_prediction(prediction_id)
+    print(f"Output URL: {result['output']}")
+    print(f"Processing time: {result['metrics']['predict_time']}s")
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript/Node.js
+
+```javascript
+import axios from 'axios';
+
+const API_KEY = 'YOUR_API_KEY';
+const HEADERS = {
+  'X-API-Key': API_KEY,
+  'Content-Type': 'application/json'
+};
+
+async function createPrediction() {
+  try {
+    const response = await axios.post(
+      'https://api.eachlabs.ai/v1/prediction/',
+      {
+        model: 'reve-text-to-image',
+        version: '0.0.1',
+        input: {
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+},
+        webhook_url: ""
+      },
+      { headers: HEADERS }
+    );
+    
+    const prediction = response.data;
+    if (prediction.status !== 'success') {
+      throw new Error(`Prediction failed: ${JSON.stringify(prediction)}`);
+    }
+    
+    return prediction.predictionID;
+  } catch (error) {
+    console.error('Error creating prediction:', error);
+    throw error;
+  }
+}
+
+async function getPrediction(predictionId) {
+  while (true) {
+    try {
+      const response = await axios.get(
+        `https://api.eachlabs.ai/v1/prediction/${predictionId}`,
+        { headers: HEADERS }
+      );
+      
+      const result = response.data;
+      if (result.status === 'success') {
+        return result;
+      } else if (result.status === 'error') {
+        throw new Error(`Prediction failed: ${JSON.stringify(result)}`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('Error getting prediction:', error);
+      throw error;
+    }
+  }
+}
+
+// Usage
+async function runPrediction() {
+  try {
+    const predictionId = await createPrediction();
+    console.log(`Prediction created: ${predictionId}`);
+    
+    const result = await getPrediction(predictionId);
+    console.log(`Output URL: ${result.output}`);
+    console.log(`Processing time: ${result.metrics.predict_time}s`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
+}
+
+runPrediction();
+```
+
+#### Go
+
+```go
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
+const (
+	APIKey = "YOUR_API_KEY"
+	BaseURL = "https://api.eachlabs.ai/v1"
+)
+
+type PredictionRequest struct {
+	Model      string      `json:"model"`
+	Version    string      `json:"version"`
+	Input      interface{} `json:"input"`
+	WebhookURL string      `json:"webhook_url"`
+}
+
+type PredictionResponse struct {
+	Status       string `json:"status"`
+	PredictionID string `json:"predictionID"`
+}
+
+type PredictionResult struct {
+	Status  string            `json:"status"`
+	Output  string            `json:"output"`
+	Metrics PredictionMetrics `json:"metrics"`
+}
+
+type PredictionMetrics struct {
+	PredictTime float64 `json:"predict_time"`
+}
+
+func createPrediction() (string, error) {
+	reqBody := PredictionRequest{
+		Model:      "reve-text-to-image",
+		Version:    "0.0.1",
+		Input:      {
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+},
+		WebhookURL: "",
+	}
+	
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+	
+	req, err := http.NewRequest("POST", BaseURL+"/prediction/", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", err
+	}
+	
+	req.Header.Set("X-API-Key", APIKey)
+	req.Header.Set("Content-Type", "application/json")
+	
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	
+	var predResp PredictionResponse
+	if err := json.Unmarshal(body, &predResp); err != nil {
+		return "", err
+	}
+	
+	if predResp.Status != "success" {
+		return "", fmt.Errorf("prediction failed: %s", string(body))
+	}
+	
+	return predResp.PredictionID, nil
+}
+
+func getPrediction(predictionID string) (*PredictionResult, error) {
+	for {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/prediction/%s", BaseURL, predictionID), nil)
+		if err != nil {
+			return nil, err
+		}
+		
+		req.Header.Set("X-API-Key", APIKey)
+		
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		
+		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		
+		var result PredictionResult
+		if err := json.Unmarshal(body, &result); err != nil {
+			return nil, err
+		}
+		
+		if result.Status == "success" {
+			return &result, nil
+		} else if result.Status == "error" {
+			return nil, fmt.Errorf("prediction failed: %s", string(body))
+		}
+		
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func main() {
+	predictionID, err := createPrediction()
+	if err != nil {
+		fmt.Printf("Error creating prediction: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Prediction created: %s\n", predictionID)
+	
+	result, err := getPrediction(predictionID)
+	if err != nil {
+		fmt.Printf("Error getting prediction: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Output URL: %s\n", result.Output)
+	fmt.Printf("Processing time: %.2fs\n", result.Metrics.PredictTime)
+}
+```
+
+### Response Format
+
+#### Create Prediction Response
+```json
+{
+  "status": "success",
+  "message": "Prediction created successfully",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321"
+}
+```
+
+#### Get Prediction Response (Success)
+```json
+{
+  "status": "success",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "output": "https://output-url.com/result",
+  "metrics": {
+    "predict_time": 2.5
+  }
+}
+```
+
+#### Get Prediction Response (Processing)
+```json
+{
+  "status": "processing",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "message": "Prediction is being processed"
+}
+```
+
+#### Error Response
+```json
+{
+  "status": "error",
+  "message": "Error description",
+  "details": "Additional error details"
+}
+```
+
+### Rate Limits
+
+- Maximum 100 requests per minute per API key
+- Maximum 10 concurrent predictions per API key
+- Webhook timeout: 30 seconds
+
+### Error Handling
+
+Common HTTP status codes:
+- `200` - Success
+- `400` - Bad Request (invalid input parameters)
+- `401` - Unauthorized (invalid API key)
+- `429` - Too Many Requests (rate limit exceeded)
+- `500` - Internal Server Error
+
+### Webhooks (Optional)
+
+You can provide a webhook URL to receive prediction results automatically:
+
+```json
+{
+  "model": "reve-text-to-image",
+  "version": "0.0.1",
+  "input": {
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+},
+  "webhook_url": "https://your-domain.com/webhook"
+}
+```
+
+The webhook will receive a POST request with the prediction result when complete.
+
+#### Webhook Response Format
+
+When your webhook URL is called, it will receive a POST request with the following payload:
+
+**Success Response:**
+```json
+{
+  "error": "",
+  "exec_id": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "flow_id": "",
+  "output": "Output URL",
+  "status": "succeeded" // succeeded or failed
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Error description here",
+  "exec_id": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "flow_id": "",
+  "output": "",
+  "status": "failed"
+}
+```
+
+**Fields:**
+- `exec_id`: The prediction ID (same as predictionID from create response)
+- `flow_id`: Flow identifier (empty for single model predictions)
+- `output`: URL to the result file or output data
+- `status`: Either "succeeded" or "failed"
+- `error`: Error message if status is "failed", empty string if succeeded
+
+
+
+
+## Input Parameters
+
+### Sync Mode
+- **Type**: boolean
+- **Component**: checkbox
+- **Required**: No
+- **Description**: If `True`, the media will be returned as a data URI and the output data won't be available in the request history.
+- **Default**: False
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Number of Images
+- **Type**: integer
+- **Component**: slider
+- **Required**: No
+- **Description**: Number of images to generate
+- **Default**: 1
+- **Minimum**: 1
+- **Maximum**: 4
+
+
+
+### Aspect Ratio
+- **Type**: string
+- **Component**: select
+- **Required**: No
+- **Description**: The desired aspect ratio of the generated image.
+- **Default**: 16:9
+- **Minimum**: 0
+- **Maximum**: 0
+- **Options**: "16:9,9:16,3:2,2:3,4:3,3:4,1:1"
+
+
+### Prompt
+- **Type**: string
+- **Component**: input
+- **Required**: Yes
+- **Description**: The text description of the desired image.
+- **Default**: 
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Output Format
+- **Type**: string
+- **Component**: select
+- **Required**: No
+- **Description**: Output format for the generated image.
+- **Default**: png
+- **Minimum**: 0
+- **Maximum**: 0
+- **Options**: "png,jpeg,webp"
+
+
+## Pricing
+
+Pricing information not available for this model.
+
+
+## Documentation
+
+<p>Reve-text-to-image is an advanced AI image generation model designed to create high-quality images from natural language prompts. Developed by the Reve team, the model is engineered for strong prompt adherence, refined aesthetics, and accurate text rendering, making it suitable for both creative and professional applications. The model is accessible via an OpenAPI schema, allowing for seamless integration into various workflows and automation pipelines.</p>
+<p>Key features of Reve-text-to-image include detailed visual output, robust handling of complex instructions, and enhanced typography capabilities. The model supports customizable aspect ratios and output formats, offering flexibility for diverse use cases. Its architecture is optimized for both image generation and editing, enabling users to create new visuals from scratch or transform existing images using text-based instructions.</p>
+<p>What sets Reve-text-to-image apart is its focus on prompt fidelity and visual quality, particularly in rendering text within images—a common challenge for generative models. The model is also noted for its user-friendly API, which supports both JSON and base64 image outputs, and its ability to generate images with minimal technical setup required by the end user.</p>
+
+### Technical Specifications
+<ul>
+<li>Architecture: Proprietary diffusion-based architecture (specifics not publicly detailed)</li>
+<li>Parameters: Not publicly disclosed</li>
+<li>Resolution: Supports aspect ratios such as 3:2 and 16:9; maximum resolution up to 2560 pixels on the long side</li>
+<li>Input/Output formats: Accepts text prompts; outputs images in base64 or URL format, with JSON metadata</li>
+<li>Performance metrics: Not explicitly published, but user feedback highlights strong prompt adherence and high aesthetic quality</li>
+</ul>
+
+### Key Considerations
+<ul>
+<li>The model excels with detailed, well-structured prompts; vague or ambiguous instructions may yield less optimal results</li>
+<li>For best results, specify desired aspect ratio and style in the prompt</li>
+<li>Typographic rendering is a strength, but complex multi-line or stylized text may still present challenges</li>
+<li>Image generation speed may vary based on resolution and prompt complexity; higher quality may require longer generation times</li>
+<li>Iterative prompt refinement is often necessary to achieve highly specific visual outcomes</li>
+<li>Avoid overly long or convoluted prompts, as these can reduce prompt adherence and output quality</li>
+</ul>
+
+### Capabilities
+<ul>
+<li>Generates high-quality, detailed images from natural language prompts</li>
+<li>Strong prompt adherence, accurately reflecting user instructions</li>
+<li>Advanced typography rendering, enabling text within images</li>
+<li>Supports both text-to-image and image-to-image (editing) workflows</li>
+<li>Flexible aspect ratio and output format options</li>
+<li>Consistent aesthetic quality across a range of styles and subjects</li>
+<li>Adaptable to both creative and professional use cases</li>
+</ul>
+
+### Use Cases
+<ul>
+<li>Professional marketing materials, such as posters and banners, generated from descriptive prompts</li>
+<li>Creative projects, including concept art, storyboarding, and digital illustrations</li>
+<li>Business use cases like product mockups, branded visuals, and presentation graphics</li>
+<li>Personal projects, such as custom greeting cards, social media content, and personalized artwork</li>
+<li>Industry-specific applications, including educational visuals, architectural renders, and advertising assets</li>
+</ul>
+
+### Tips and Tricks
+<ul>
+<li>Use clear, concise prompts that specify subject, style, and desired composition (e.g., "A photorealistic portrait of a golden retriever in a park, 16:9 aspect ratio")</li>
+<li>To generate images with text, include explicit instructions about font style, placement, and content (e.g., "A poster with the words 'Welcome Home' in bold, centered at the top")</li>
+<li>Experiment with aspect ratios to fit your intended use case (e.g., 3:2 for prints, 16:9 for presentations)</li>
+<li>For iterative refinement, adjust one parameter at a time and compare outputs to identify the most effective changes</li>
+<li>Leverage the model's editing capabilities by uploading an existing image and providing a targeted prompt for transformation (e.g., "Make the sky sunset orange")</li>
+<li>Use the base64 output option for direct integration into applications or further automated processing</li>
+</ul>
+
+### Things to Be Aware Of
+<ul>
+<li>Some users report that the model performs best with clear, unambiguous prompts and may require several iterations for complex scenes</li>
+<li>Typographic rendering is generally strong, but edge cases with unusual fonts or layouts may not always be perfect</li>
+<li>Performance benchmarks are not widely published, but community feedback indicates reliable speed and quality for most standard use cases</li>
+<li>Resource requirements are moderate; high-resolution outputs may require more processing time</li>
+<li>Users highlight the model's ease of use and strong visual quality as positive aspects</li>
+<li>Common concerns include occasional prompt misinterpretation and limitations in rendering highly abstract or surreal concepts</li>
+<li>Experimental features, such as advanced editing or multi-image composition, may not be as robust as core generation capabilities</li>
+</ul>
+
+### Limitations
+<ul>
+<li>The underlying architecture and parameter count are not publicly disclosed, limiting transparency for technical evaluation</li>
+<li>May not be optimal for generating highly abstract, surreal, or scientifically precise imagery</li>
+<li>Complex multi-line or stylized text rendering can still present challenges despite improved typography features</li>
+</ul>
+
+
+## Example Usage
+
+```json
+{
+  "prompt": "Wide-angle medium format photograph of a group of cows grazing peacefully in a golden grassy field, with dramatic snow-capped mountains in the background under a partly cloudy blue sky, natural daylight, cinematic tones, captured on 120 film, soft grain, realistic colors.",
+  "aspect_ratio": "16:9",
+  "num_images": 1,
+  "output_format": "png"
+}
+```
+
+## Hardware Requirements
+
+
+## Related Models
+
+- [Logo Generator](https://www.eachlabs.ai/ai-models/logo-generator) - Logo Generator
+- [Nano Banana Pro](https://www.eachlabs.ai/ai-models/nano-banana-pro) - Nano Banana Pro
+- [Seedream V4 | Text to Image](https://www.eachlabs.ai/ai-models/seedream-v4-text-to-image) - Seedream V4 | Text to Image
+- [Juggernaut Flux Lora](https://www.eachlabs.ai/ai-models/juggernaut-flux-lora) - Juggernaut Flux Lora
+
+## Support
+
+- [Eachlabs Documentation](https://www.eachlabs.ai/docs) - Platform documentation and guides
+- [API Reference](https://www.eachlabs.ai/api) - Complete API documentation
+- [Contact Support](https://www.eachlabs.ai/contact) - Get help with integration and usage

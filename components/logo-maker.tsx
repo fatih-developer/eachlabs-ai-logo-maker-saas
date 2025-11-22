@@ -1,0 +1,366 @@
+"use client"
+
+import { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Loader2, Wand2, Download, FileText, Image as ImageIcon } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Skeleton } from "@/components/ui/skeleton"
+import { RainbowButton } from "@/components/ui/rainbow-button"
+
+const formSchema = z.object({
+  appName: z.string().min(2, {
+    message: "Uygulama adı en az 2 karakter olmalıdır.",
+  }),
+  appFocus: z.string().min(3, {
+    message: "Uygulama odağı en az 3 karakter olmalıdır.",
+  }),
+  color1: z.string().min(2, {
+    message: "Lütfen bir renk giriniz.",
+  }),
+  color2: z.string().min(2, {
+    message: "Lütfen ikinci bir renk giriniz.",
+  }),
+  model: z.string({
+    required_error: "Lütfen bir model seçiniz.",
+  }),
+  outputCount: z.string({
+    required_error: "Lütfen çıktı sayısını seçiniz.",
+  }),
+})
+
+// Basic color mapping for Turkish color names to CSS values for preview
+const colorMap: Record<string, string> = {
+  turkuaz: "turquoise",
+  "safir yesil": "#0F52BA", // Approximation
+  kirmizi: "red",
+  mavi: "blue",
+  yesil: "green",
+  sari: "yellow",
+  mor: "purple",
+  turuncu: "orange",
+  siyah: "black",
+  beyaz: "white",
+  gri: "gray",
+  pembe: "pink",
+  lacivert: "navy",
+  bordo: "maroon",
+}
+
+const getColorValue = (val: string) => {
+  if (!val) return "transparent"
+  const lower = val.toLowerCase()
+  if (colorMap[lower]) return colorMap[lower]
+  return val // Return as is (hex, rgb, or valid css name)
+}
+
+export function LogoMaker() {
+  const [generatedImages, setGeneratedImages] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [generationCount, setGenerationCount] = useState<number>(0)
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      appName: "Tuncer Kuruyemis",
+      appFocus: "Antep Fistigi",
+      color1: "Turkuaz",
+      color2: "Safir Yesil",
+      model: "nano-banana",
+      outputCount: "2",
+    },
+  })
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true)
+    setGeneratedImages([])
+    setGenerationCount(parseInt(values.outputCount))
+
+    try {
+      const createRes = await fetch("/api/predictions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      })
+
+      if (!createRes.ok) {
+        throw new Error("Failed to start generation")
+      }
+
+      const { predictionID } = await createRes.json()
+
+      while (true) {
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        const pollRes = await fetch(`/api/predictions/${predictionID}`)
+        if (!pollRes.ok) continue
+
+        const result = await pollRes.json()
+
+        if (result.status === "success") {
+          const output = Array.isArray(result.output)
+            ? result.output
+            : [result.output]
+          setGeneratedImages(output)
+          setIsLoading(false)
+          break
+        } else if (result.status === "failed" || result.status === "error") {
+          console.error("Generation failed", result)
+          setIsLoading(false)
+          break
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="w-full max-w-3xl mx-auto p-4">
+      <Card className="shadow-xl border-0">
+        <CardHeader className="space-y-1 pb-8">
+          <CardTitle className="text-xl font-bold">AI Logo Oluşturucu</CardTitle>
+          <CardDescription>
+            Uygulamanız için hızlı ve modern bir logo tasarlayın.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormField
+                  control={form.control}
+                  name="appName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/80">Uygulama Adı</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            placeholder="Örn: FinansTakip" 
+                            {...field} 
+                            className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="appFocus"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/80">Uygulama Odağı</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            placeholder="Örn: Uçan roket, Cüzdan" 
+                            {...field} 
+                            className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">
+                            <ImageIcon className="h-5 w-5" />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="color1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/80">Renk 1</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            placeholder="Örn: Turkuaz" 
+                            {...field} 
+                            className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
+                          />
+                          <div 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-sm border shadow-sm"
+                            style={{ backgroundColor: getColorValue(field.value) }}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="color2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/80">Renk 2</FormLabel>
+                      <FormControl>
+                         <div className="relative">
+                          <Input 
+                            placeholder="Örn: Mor" 
+                            {...field} 
+                            className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
+                          />
+                          <div 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-sm border shadow-sm"
+                            style={{ backgroundColor: getColorValue(field.value) }}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="model"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/80">Model</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-11 bg-background border-input/60 focus:ring-1">
+                            <SelectValue placeholder="Model seçiniz" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="nano-banana">Nano Banana</SelectItem>
+                          <SelectItem value="seedream-v4">
+                            Seedream v4
+                          </SelectItem>
+                          <SelectItem value="reve-text">Reve Text</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="outputCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-foreground/80">Çıktı Sayısı</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-11 bg-background border-input/60 focus:ring-1">
+                            <SelectValue placeholder="Sayı seçiniz" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1">1 Adet</SelectItem>
+                          <SelectItem value="2">2 Adet</SelectItem>
+                          <SelectItem value="3">3 Adet</SelectItem>
+                          <SelectItem value="4">4 Adet</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <RainbowButton type="submit" className="w-full h-12 rounded-xl text-base font-medium" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Oluşturuluyor...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Logo Oluştur
+                  </>
+                )}
+              </RainbowButton>
+            </form>
+          </Form>
+        </CardContent>
+
+        {/* Loading State or Result */}
+        {(isLoading || generatedImages.length > 0) && (
+          <CardFooter className="flex flex-col items-start gap-4 pt-8">
+            <div className="w-full space-y-4">
+              <h3 className="font-medium text-sm text-muted-foreground">
+                {isLoading ? "Oluşturuluyor..." : "Oluşturulan Logolar:"}
+              </h3>
+
+              {isLoading ? (
+                <div className="grid grid-cols-2 gap-8">
+                  {Array.from({ length: generationCount }).map((_, i) => (
+                    <div key={i} className="aspect-square rounded-[2rem] bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-8">
+                  {generatedImages.map((img, i) => (
+                    <div
+                      key={i}
+                      className="group relative aspect-square rounded-[2rem] overflow-hidden border bg-white/50 shadow-sm hover:shadow-md transition-all duration-300"
+                    >
+                       <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent z-10 pointer-events-none" />
+                      <img
+                        src={img}
+                        alt={`Generated logo ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                        <Button variant="secondary" size="sm" className="rounded-full" asChild>
+                          <a href={img} download target="_blank" rel="noopener noreferrer">
+                            <Download className="mr-2 h-4 w-4" />
+                            İndir
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardFooter>
+        )}
+      </Card>
+    </div>
+  )
+}

@@ -1,0 +1,708 @@
+# Nano Banana
+
+> Google’s cutting-edge image generation and editing model is now live on Eachlabs. Giving you fast, affordable, and flexible creative power with full control.
+
+## Model Information
+
+- **Name**: nano-banana
+- **Version**: 0.0.1
+- **Category**: Text to Image
+- **Output Type**: array
+- **Average Response Time**: 20s
+- **Updated**: 11/6/2025
+
+## API Access
+
+- [Interactive Demo](https://www.eachlabs.ai/ai-models/nano-banana) - Try the model with a web interface
+
+- [Official API](true) - Direct access to the original model API
+
+
+
+## API Documentation
+
+### Authentication
+
+All API requests require authentication using your API key. Include your API key in the request headers:
+
+```
+X-API-Key: YOUR_API_KEY
+```
+
+### Base URL
+
+```
+https://api.eachlabs.ai/v1
+```
+
+### Endpoints
+
+#### Create a Prediction
+
+Send a POST request to create a new prediction. This will return a prediction ID that you'll use to check the result.
+
+**Endpoint:** `POST https://api.eachlabs.ai/v1/prediction/`
+
+**Headers:**
+- `X-API-Key: YOUR_API_KEY`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "model": "nano-banana",
+  "version": "0.0.1",
+  "input": {
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+},
+  "webhook_url": ""
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Prediction created successfully",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321"
+}
+```
+
+Use the `predictionID` from this response to poll for results.
+
+#### Get Prediction Result
+
+Poll the prediction endpoint with the predictionID until the result is ready.
+
+**Endpoint:** `GET https://api.eachlabs.ai/v1/prediction/{PREDICTION_ID}`
+
+**Headers:**
+- `X-API-Key: YOUR_API_KEY`
+
+### Code Examples
+
+#### cURL
+
+**Create Prediction:**
+```bash
+curl -X POST \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "model": "nano-banana",
+    "version": "0.0.1",
+    "input": {
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+},
+    "webhook_url": ""
+  }' \
+  https://api.eachlabs.ai/v1/prediction/
+```
+
+**Get Result:**
+```bash
+curl -X GET \
+  -H "X-API-Key: YOUR_API_KEY" \
+  https://api.eachlabs.ai/v1/prediction/{{PREDICTION_ID}}
+```
+
+#### Python
+
+```python
+import requests
+import time
+
+API_KEY = 'YOUR_API_KEY'
+HEADERS = {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json"
+}
+
+def create_prediction():
+    response = requests.post(
+        "https://api.eachlabs.ai/v1/prediction/",
+        headers=HEADERS,
+        json={
+            "model": "nano-banana",
+            "version": "0.0.1",
+            "input": {
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+},
+            "webhook_url": ""
+        }
+    )
+    prediction = response.json()
+    if prediction["status"] != "success":
+        raise Exception(f"Prediction failed: {prediction}")
+    return prediction["predictionID"]
+
+def get_prediction(prediction_id):
+    while True:
+        result = requests.get(
+            f"https://api.eachlabs.ai/v1/prediction/{prediction_id}",
+            headers=HEADERS
+        ).json()
+        
+        if result["status"] == "success":
+            return result
+        elif result["status"] == "error":
+            raise Exception(f"Prediction failed: {result}")
+        
+        time.sleep(1)  # Wait before polling again
+
+# Usage
+try:
+    prediction_id = create_prediction()
+    print(f"Prediction created: {prediction_id}")
+    
+    result = get_prediction(prediction_id)
+    print(f"Output URL: {result['output']}")
+    print(f"Processing time: {result['metrics']['predict_time']}s")
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript/Node.js
+
+```javascript
+import axios from 'axios';
+
+const API_KEY = 'YOUR_API_KEY';
+const HEADERS = {
+  'X-API-Key': API_KEY,
+  'Content-Type': 'application/json'
+};
+
+async function createPrediction() {
+  try {
+    const response = await axios.post(
+      'https://api.eachlabs.ai/v1/prediction/',
+      {
+        model: 'nano-banana',
+        version: '0.0.1',
+        input: {
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+},
+        webhook_url: ""
+      },
+      { headers: HEADERS }
+    );
+    
+    const prediction = response.data;
+    if (prediction.status !== 'success') {
+      throw new Error(`Prediction failed: ${JSON.stringify(prediction)}`);
+    }
+    
+    return prediction.predictionID;
+  } catch (error) {
+    console.error('Error creating prediction:', error);
+    throw error;
+  }
+}
+
+async function getPrediction(predictionId) {
+  while (true) {
+    try {
+      const response = await axios.get(
+        `https://api.eachlabs.ai/v1/prediction/${predictionId}`,
+        { headers: HEADERS }
+      );
+      
+      const result = response.data;
+      if (result.status === 'success') {
+        return result;
+      } else if (result.status === 'error') {
+        throw new Error(`Prediction failed: ${JSON.stringify(result)}`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('Error getting prediction:', error);
+      throw error;
+    }
+  }
+}
+
+// Usage
+async function runPrediction() {
+  try {
+    const predictionId = await createPrediction();
+    console.log(`Prediction created: ${predictionId}`);
+    
+    const result = await getPrediction(predictionId);
+    console.log(`Output URL: ${result.output}`);
+    console.log(`Processing time: ${result.metrics.predict_time}s`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
+}
+
+runPrediction();
+```
+
+#### Go
+
+```go
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
+const (
+	APIKey = "YOUR_API_KEY"
+	BaseURL = "https://api.eachlabs.ai/v1"
+)
+
+type PredictionRequest struct {
+	Model      string      `json:"model"`
+	Version    string      `json:"version"`
+	Input      interface{} `json:"input"`
+	WebhookURL string      `json:"webhook_url"`
+}
+
+type PredictionResponse struct {
+	Status       string `json:"status"`
+	PredictionID string `json:"predictionID"`
+}
+
+type PredictionResult struct {
+	Status  string            `json:"status"`
+	Output  string            `json:"output"`
+	Metrics PredictionMetrics `json:"metrics"`
+}
+
+type PredictionMetrics struct {
+	PredictTime float64 `json:"predict_time"`
+}
+
+func createPrediction() (string, error) {
+	reqBody := PredictionRequest{
+		Model:      "nano-banana",
+		Version:    "0.0.1",
+		Input:      {
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+},
+		WebhookURL: "",
+	}
+	
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+	
+	req, err := http.NewRequest("POST", BaseURL+"/prediction/", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", err
+	}
+	
+	req.Header.Set("X-API-Key", APIKey)
+	req.Header.Set("Content-Type", "application/json")
+	
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	
+	var predResp PredictionResponse
+	if err := json.Unmarshal(body, &predResp); err != nil {
+		return "", err
+	}
+	
+	if predResp.Status != "success" {
+		return "", fmt.Errorf("prediction failed: %s", string(body))
+	}
+	
+	return predResp.PredictionID, nil
+}
+
+func getPrediction(predictionID string) (*PredictionResult, error) {
+	for {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/prediction/%s", BaseURL, predictionID), nil)
+		if err != nil {
+			return nil, err
+		}
+		
+		req.Header.Set("X-API-Key", APIKey)
+		
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		
+		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		
+		var result PredictionResult
+		if err := json.Unmarshal(body, &result); err != nil {
+			return nil, err
+		}
+		
+		if result.Status == "success" {
+			return &result, nil
+		} else if result.Status == "error" {
+			return nil, fmt.Errorf("prediction failed: %s", string(body))
+		}
+		
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func main() {
+	predictionID, err := createPrediction()
+	if err != nil {
+		fmt.Printf("Error creating prediction: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Prediction created: %s\n", predictionID)
+	
+	result, err := getPrediction(predictionID)
+	if err != nil {
+		fmt.Printf("Error getting prediction: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Output URL: %s\n", result.Output)
+	fmt.Printf("Processing time: %.2fs\n", result.Metrics.PredictTime)
+}
+```
+
+### Response Format
+
+#### Create Prediction Response
+```json
+{
+  "status": "success",
+  "message": "Prediction created successfully",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321"
+}
+```
+
+#### Get Prediction Response (Success)
+```json
+{
+  "status": "success",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "output": "https://output-url.com/result",
+  "metrics": {
+    "predict_time": 2.5
+  }
+}
+```
+
+#### Get Prediction Response (Processing)
+```json
+{
+  "status": "processing",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "message": "Prediction is being processed"
+}
+```
+
+#### Error Response
+```json
+{
+  "status": "error",
+  "message": "Error description",
+  "details": "Additional error details"
+}
+```
+
+### Rate Limits
+
+- Maximum 100 requests per minute per API key
+- Maximum 10 concurrent predictions per API key
+- Webhook timeout: 30 seconds
+
+### Error Handling
+
+Common HTTP status codes:
+- `200` - Success
+- `400` - Bad Request (invalid input parameters)
+- `401` - Unauthorized (invalid API key)
+- `429` - Too Many Requests (rate limit exceeded)
+- `500` - Internal Server Error
+
+### Webhooks (Optional)
+
+You can provide a webhook URL to receive prediction results automatically:
+
+```json
+{
+  "model": "nano-banana",
+  "version": "0.0.1",
+  "input": {
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+},
+  "webhook_url": "https://your-domain.com/webhook"
+}
+```
+
+The webhook will receive a POST request with the prediction result when complete.
+
+#### Webhook Response Format
+
+When your webhook URL is called, it will receive a POST request with the following payload:
+
+**Success Response:**
+```json
+{
+  "error": "",
+  "exec_id": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "flow_id": "",
+  "output": "Output URL",
+  "status": "succeeded" // succeeded or failed
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Error description here",
+  "exec_id": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "flow_id": "",
+  "output": "",
+  "status": "failed"
+}
+```
+
+**Fields:**
+- `exec_id`: The prediction ID (same as predictionID from create response)
+- `flow_id`: Flow identifier (empty for single model predictions)
+- `output`: URL to the result file or output data
+- `status`: Either "succeeded" or "failed"
+- `error`: Error message if status is "failed", empty string if succeeded
+
+
+
+
+## Input Parameters
+
+### Limit Generations
+- **Type**: boolean
+- **Component**: checkbox
+- **Required**: No
+- **Description**: Experimental parameter to limit the number of generations from each round of prompting to 1. Set to True to to disregard any instructions in the prompt regarding the number of images to generate.
+- **Default**: True
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Sync Mode
+- **Type**: boolean
+- **Component**: checkbox
+- **Required**: No
+- **Description**: If True, the media will be returned as a data URI and the output data won't be available in the request history.
+- **Default**: false
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Output Format
+- **Type**: string
+- **Component**: select
+- **Required**: No
+- **Description**: Output format for the images
+- **Default**: png
+- **Minimum**: 0
+- **Maximum**: 0
+- **Options**: "jpeg,png"
+
+
+### Aspect Ratio
+- **Type**: string
+- **Component**: select
+- **Required**: No
+- **Description**: Output format for the images
+- **Default**: 1:1
+- **Minimum**: 0
+- **Maximum**: 0
+- **Options**: "21:9,1:1,4:3,3:2,2:3,5:4,4:5,3:4,16:9,9:16"
+
+
+### Number of Images
+- **Type**: integer
+- **Component**: slider
+- **Required**: Yes
+- **Description**: No description available
+- **Default**: 1
+- **Minimum**: 1
+- **Maximum**: 4
+
+
+
+### Prompt
+- **Type**: string
+- **Component**: input
+- **Required**: Yes
+- **Description**: No description available
+- **Default**: false
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+## Pricing
+
+- **Charge Type**: dynamic
+- **Base Charge**: $[object Object]
+
+
+
+## Documentation
+
+<p>Nano Banana is Google’s latest image generation and editing model, developed by Google DeepMind and integrated into the Gemini ecosystem. The model is designed to provide fast, flexible, and highly controllable creative power for users ranging from professional designers to hobbyists. Its standout feature is the seamless combination of image generation and editing, allowing users to create, refine, and iterate on visuals using natural language prompts.</p>
+<p>Nano Banana leverages the Gemini 2.5 Flash Image architecture, which brings advanced context-aware understanding and world knowledge to the creative process. This enables the model to interpret complex scenes, maintain character and style consistency across multiple images, and perform detailed edits without losing coherence. The model is notable for its speed, delivering most edits in under 10 seconds, and includes invisible SynthID watermarking for authenticity and provenance tracking.</p>
+<p>What sets Nano Banana apart is its focus on iterative storytelling and creative control. Users can generate a scene, adjust lighting, swap objects, or shift the mood while preserving the integrity of the original image. The model has quickly gained traction in the creative community, outperforming established competitors in consistency and accuracy, and is positioned as an all-in-one creative assistant for both individual creators and enterprise teams.</p>
+
+### Technical Specifications
+<ul>
+<li>Architecture: Gemini 2.5 Flash Image (Nano Banana)</li>
+<li>Parameters: Not publicly disclosed</li>
+<li>Resolution: Supports high-resolution outputs; specific maximum not stated, but examples show detailed, print-quality images</li>
+<li>Input/Output formats: Accepts text prompts and image uploads; outputs in standard image formats (JPEG, PNG)</li>
+<li>Performance metrics: Most edits and generations complete in under 10 seconds; benchmarks show superior consistency and speed compared to DALL·E 3, Midjourney, and Stable Diffusion</li>
+</ul>
+
+### Key Considerations
+<ul>
+<li>Nano Banana excels at maintaining character and style consistency across multiple images, which is critical for storyboarding and branding</li>
+<li>Best results are achieved with clear, detailed prompts that specify desired styles, objects, and context</li>
+<li>Iterative refinement is encouraged; users can repeatedly edit and adjust images without losing coherence</li>
+<li>Quality and speed are balanced, but extremely complex scenes may require additional prompt tuning for optimal results</li>
+<li>Prompt engineering is key: specifying relationships, lighting, and mood yields more accurate outputs</li>
+<li>Avoid overly vague prompts, as the model may default to generic interpretations</li>
+<li>Watermarked outputs ensure authenticity but may affect workflows requiring unmarked images</li>
+</ul>
+
+### Capabilities
+<ul>
+<li>Generates high-quality images from text prompts and uploaded photos</li>
+<li>Edits existing images with natural language instructions, including object replacement, style transfer, and scene modification</li>
+<li>Maintains character and style consistency across multiple images and edits</li>
+<li>Blends multiple images or styles into a single cohesive output</li>
+<li>Supports rapid, real-time creative workflows with most edits under 10 seconds</li>
+<li>Integrates invisible watermarking for authenticity and provenance</li>
+<li>Interprets complex scenes, diagrams, and sketches with context-aware understanding</li>
+<li>Enables iterative storytelling and scene refinement without loss of coherence</li>
+</ul>
+
+### Use Cases
+<ul>
+<li>Professional storyboarding and campaign development for marketing and advertising</li>
+<li>Rapid prototyping and visualization for designers and creative agencies</li>
+<li>Character design and consistency for comics, games, and animation</li>
+<li>Personal creative projects such as turning pets into figurines or creating fantasy scenes</li>
+<li>Business applications including product mockups, branding assets, and promotional materials</li>
+<li>Industry-specific uses like architectural visualization, fashion design, and culinary presentation</li>
+<li>Educational content creation, including visual aids and interactive storytelling</li>
+<li>Social media content generation and meme creation, as documented in community forums</li>
+</ul>
+
+### Tips and Tricks
+<ul>
+<li>Use descriptive prompts that include style, mood, and object relationships for best results</li>
+<li>Upload reference images to anchor character or object consistency across edits</li>
+<li>For iterative refinement, start with a broad prompt and progressively add details in subsequent edits</li>
+<li>To blend multiple images, specify which elements to retain or merge for precise control</li>
+<li>For advanced effects, combine style transfer (e.g., "make this photo a pencil drawing") with object manipulation ("change the dress to tennis balls")</li>
+<li>When creating multi-image stories, define protagonists and narrative arcs in the prompt to maintain visual coherence</li>
+<li>Use the model’s context-aware capabilities to interpret sketches, diagrams, or complex scenes by providing clear instructions</li>
+</ul>
+
+### Things to Be Aware Of
+<ul>
+<li>Some experimental features, such as advanced style blending and multi-image storytelling, may behave unpredictably in edge cases</li>
+<li>Users report occasional quirks with object placement or background consistency, especially in highly complex scenes</li>
+<li>Performance benchmarks indicate superior speed and consistency compared to leading competitors, but resource requirements for high-res outputs may be significant</li>
+<li>Consistency across edits is a major positive theme in user reviews, with many praising the model’s ability to maintain character identity</li>
+<li>Common concerns include occasional generic outputs when prompts are not sufficiently detailed</li>
+<li>Positive feedback centers on speed, ease of use, and creative flexibility</li>
+<li>Negative feedback patterns include limitations in ultra-realistic rendering and occasional artifacts in blended images</li>
+</ul>
+
+### Limitations
+<ul>
+<li>Primary technical constraint is the lack of publicly disclosed parameter count and architectural details, limiting transparency for advanced users</li>
+<li>May not be optimal for ultra-realistic photorealism or highly specialized artistic styles outside its trained domains</li>
+<li>Complex multi-object scenes can sometimes result in minor inconsistencies or artifacts, requiring prompt refinement</li>
+</ul>
+
+
+## Example Usage
+
+```json
+{
+  "num_images": "1",
+  "prompt": "a cool banana with sunglesses",
+  "sync_mode": false,
+  "output_format": "png",
+  "aspect_ratio": "1:1",
+  "limit_generations": true
+}
+```
+
+## Hardware Requirements
+
+
+## Related Models
+
+- [Reve | Text to Image](https://www.eachlabs.ai/ai-models/reve-text-to-image) - Reve | Text to Image
+- [Logo Generator](https://www.eachlabs.ai/ai-models/logo-generator) - Logo Generator
+- [Tencent | Flux | Srpo | Text to Image](https://www.eachlabs.ai/ai-models/tencent-flux-srpo-text-to-image) - Tencent | Flux | Srpo | Text to Image
+- [Flux Kontext Lora | Text to Image](https://www.eachlabs.ai/ai-models/flux-kontext-lora-text-to-image) - Flux Kontext Lora | Text to Image
+
+## Support
+
+- [Eachlabs Documentation](https://www.eachlabs.ai/docs) - Platform documentation and guides
+- [API Reference](https://www.eachlabs.ai/api) - Complete API documentation
+- [Contact Support](https://www.eachlabs.ai/contact) - Get help with integration and usage

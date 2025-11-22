@@ -1,0 +1,697 @@
+# Seedream V4 | Text to Image
+
+> Seedream v4 is a text-to-image AI model developed by ByteDance. It generates high-resolution visuals quickly and can consistently recreate the same character or object across different scenes. The model delivers strong results in product photography, landscapes, anime, and advertising visuals.
+
+## Model Information
+
+- **Name**: seedream-v4-text-to-image
+- **Version**: 0.0.1
+- **Category**: Text to Image
+- **Output Type**: array
+- **Average Response Time**: 20s
+- **Updated**: 10/4/2025
+
+## API Access
+
+- [Interactive Demo](https://www.eachlabs.ai/ai-models/seedream-v4-text-to-image) - Try the model with a web interface
+
+
+
+
+
+## API Documentation
+
+### Authentication
+
+All API requests require authentication using your API key. Include your API key in the request headers:
+
+```
+X-API-Key: YOUR_API_KEY
+```
+
+### Base URL
+
+```
+https://api.eachlabs.ai/v1
+```
+
+### Endpoints
+
+#### Create a Prediction
+
+Send a POST request to create a new prediction. This will return a prediction ID that you'll use to check the result.
+
+**Endpoint:** `POST https://api.eachlabs.ai/v1/prediction/`
+
+**Headers:**
+- `X-API-Key: YOUR_API_KEY`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "model": "seedream-v4-text-to-image",
+  "version": "0.0.1",
+  "input": {
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+},
+  "webhook_url": ""
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Prediction created successfully",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321"
+}
+```
+
+Use the `predictionID` from this response to poll for results.
+
+#### Get Prediction Result
+
+Poll the prediction endpoint with the predictionID until the result is ready.
+
+**Endpoint:** `GET https://api.eachlabs.ai/v1/prediction/{PREDICTION_ID}`
+
+**Headers:**
+- `X-API-Key: YOUR_API_KEY`
+
+### Code Examples
+
+#### cURL
+
+**Create Prediction:**
+```bash
+curl -X POST \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "model": "seedream-v4-text-to-image",
+    "version": "0.0.1",
+    "input": {
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+},
+    "webhook_url": ""
+  }' \
+  https://api.eachlabs.ai/v1/prediction/
+```
+
+**Get Result:**
+```bash
+curl -X GET \
+  -H "X-API-Key: YOUR_API_KEY" \
+  https://api.eachlabs.ai/v1/prediction/{{PREDICTION_ID}}
+```
+
+#### Python
+
+```python
+import requests
+import time
+
+API_KEY = 'YOUR_API_KEY'
+HEADERS = {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json"
+}
+
+def create_prediction():
+    response = requests.post(
+        "https://api.eachlabs.ai/v1/prediction/",
+        headers=HEADERS,
+        json={
+            "model": "seedream-v4-text-to-image",
+            "version": "0.0.1",
+            "input": {
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+},
+            "webhook_url": ""
+        }
+    )
+    prediction = response.json()
+    if prediction["status"] != "success":
+        raise Exception(f"Prediction failed: {prediction}")
+    return prediction["predictionID"]
+
+def get_prediction(prediction_id):
+    while True:
+        result = requests.get(
+            f"https://api.eachlabs.ai/v1/prediction/{prediction_id}",
+            headers=HEADERS
+        ).json()
+        
+        if result["status"] == "success":
+            return result
+        elif result["status"] == "error":
+            raise Exception(f"Prediction failed: {result}")
+        
+        time.sleep(1)  # Wait before polling again
+
+# Usage
+try:
+    prediction_id = create_prediction()
+    print(f"Prediction created: {prediction_id}")
+    
+    result = get_prediction(prediction_id)
+    print(f"Output URL: {result['output']}")
+    print(f"Processing time: {result['metrics']['predict_time']}s")
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+#### JavaScript/Node.js
+
+```javascript
+import axios from 'axios';
+
+const API_KEY = 'YOUR_API_KEY';
+const HEADERS = {
+  'X-API-Key': API_KEY,
+  'Content-Type': 'application/json'
+};
+
+async function createPrediction() {
+  try {
+    const response = await axios.post(
+      'https://api.eachlabs.ai/v1/prediction/',
+      {
+        model: 'seedream-v4-text-to-image',
+        version: '0.0.1',
+        input: {
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+},
+        webhook_url: ""
+      },
+      { headers: HEADERS }
+    );
+    
+    const prediction = response.data;
+    if (prediction.status !== 'success') {
+      throw new Error(`Prediction failed: ${JSON.stringify(prediction)}`);
+    }
+    
+    return prediction.predictionID;
+  } catch (error) {
+    console.error('Error creating prediction:', error);
+    throw error;
+  }
+}
+
+async function getPrediction(predictionId) {
+  while (true) {
+    try {
+      const response = await axios.get(
+        `https://api.eachlabs.ai/v1/prediction/${predictionId}`,
+        { headers: HEADERS }
+      );
+      
+      const result = response.data;
+      if (result.status === 'success') {
+        return result;
+      } else if (result.status === 'error') {
+        throw new Error(`Prediction failed: ${JSON.stringify(result)}`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('Error getting prediction:', error);
+      throw error;
+    }
+  }
+}
+
+// Usage
+async function runPrediction() {
+  try {
+    const predictionId = await createPrediction();
+    console.log(`Prediction created: ${predictionId}`);
+    
+    const result = await getPrediction(predictionId);
+    console.log(`Output URL: ${result.output}`);
+    console.log(`Processing time: ${result.metrics.predict_time}s`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
+}
+
+runPrediction();
+```
+
+#### Go
+
+```go
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
+const (
+	APIKey = "YOUR_API_KEY"
+	BaseURL = "https://api.eachlabs.ai/v1"
+)
+
+type PredictionRequest struct {
+	Model      string      `json:"model"`
+	Version    string      `json:"version"`
+	Input      interface{} `json:"input"`
+	WebhookURL string      `json:"webhook_url"`
+}
+
+type PredictionResponse struct {
+	Status       string `json:"status"`
+	PredictionID string `json:"predictionID"`
+}
+
+type PredictionResult struct {
+	Status  string            `json:"status"`
+	Output  string            `json:"output"`
+	Metrics PredictionMetrics `json:"metrics"`
+}
+
+type PredictionMetrics struct {
+	PredictTime float64 `json:"predict_time"`
+}
+
+func createPrediction() (string, error) {
+	reqBody := PredictionRequest{
+		Model:      "seedream-v4-text-to-image",
+		Version:    "0.0.1",
+		Input:      {
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+},
+		WebhookURL: "",
+	}
+	
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+	
+	req, err := http.NewRequest("POST", BaseURL+"/prediction/", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", err
+	}
+	
+	req.Header.Set("X-API-Key", APIKey)
+	req.Header.Set("Content-Type", "application/json")
+	
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	
+	var predResp PredictionResponse
+	if err := json.Unmarshal(body, &predResp); err != nil {
+		return "", err
+	}
+	
+	if predResp.Status != "success" {
+		return "", fmt.Errorf("prediction failed: %s", string(body))
+	}
+	
+	return predResp.PredictionID, nil
+}
+
+func getPrediction(predictionID string) (*PredictionResult, error) {
+	for {
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/prediction/%s", BaseURL, predictionID), nil)
+		if err != nil {
+			return nil, err
+		}
+		
+		req.Header.Set("X-API-Key", APIKey)
+		
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		
+		body, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+		
+		var result PredictionResult
+		if err := json.Unmarshal(body, &result); err != nil {
+			return nil, err
+		}
+		
+		if result.Status == "success" {
+			return &result, nil
+		} else if result.Status == "error" {
+			return nil, fmt.Errorf("prediction failed: %s", string(body))
+		}
+		
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func main() {
+	predictionID, err := createPrediction()
+	if err != nil {
+		fmt.Printf("Error creating prediction: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Prediction created: %s\n", predictionID)
+	
+	result, err := getPrediction(predictionID)
+	if err != nil {
+		fmt.Printf("Error getting prediction: %v\n", err)
+		return
+	}
+	
+	fmt.Printf("Output URL: %s\n", result.Output)
+	fmt.Printf("Processing time: %.2fs\n", result.Metrics.PredictTime)
+}
+```
+
+### Response Format
+
+#### Create Prediction Response
+```json
+{
+  "status": "success",
+  "message": "Prediction created successfully",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321"
+}
+```
+
+#### Get Prediction Response (Success)
+```json
+{
+  "status": "success",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "output": "https://output-url.com/result",
+  "metrics": {
+    "predict_time": 2.5
+  }
+}
+```
+
+#### Get Prediction Response (Processing)
+```json
+{
+  "status": "processing",
+  "predictionID": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "message": "Prediction is being processed"
+}
+```
+
+#### Error Response
+```json
+{
+  "status": "error",
+  "message": "Error description",
+  "details": "Additional error details"
+}
+```
+
+### Rate Limits
+
+- Maximum 100 requests per minute per API key
+- Maximum 10 concurrent predictions per API key
+- Webhook timeout: 30 seconds
+
+### Error Handling
+
+Common HTTP status codes:
+- `200` - Success
+- `400` - Bad Request (invalid input parameters)
+- `401` - Unauthorized (invalid API key)
+- `429` - Too Many Requests (rate limit exceeded)
+- `500` - Internal Server Error
+
+### Webhooks (Optional)
+
+You can provide a webhook URL to receive prediction results automatically:
+
+```json
+{
+  "model": "seedream-v4-text-to-image",
+  "version": "0.0.1",
+  "input": {
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+},
+  "webhook_url": "https://your-domain.com/webhook"
+}
+```
+
+The webhook will receive a POST request with the prediction result when complete.
+
+#### Webhook Response Format
+
+When your webhook URL is called, it will receive a POST request with the following payload:
+
+**Success Response:**
+```json
+{
+  "error": "",
+  "exec_id": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "flow_id": "",
+  "output": "Output URL",
+  "status": "succeeded" // succeeded or failed
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Error description here",
+  "exec_id": "25cd93ae-5046-462d-85ec-7c2ec5710321",
+  "flow_id": "",
+  "output": "",
+  "status": "failed"
+}
+```
+
+**Fields:**
+- `exec_id`: The prediction ID (same as predictionID from create response)
+- `flow_id`: Flow identifier (empty for single model predictions)
+- `output`: URL to the result file or output data
+- `status`: Either "succeeded" or "failed"
+- `error`: Error message if status is "failed", empty string if succeeded
+
+
+
+
+## Input Parameters
+
+### Enable Safety Checker
+- **Type**: boolean
+- **Component**: checkbox
+- **Required**: No
+- **Description**: If set to true, the safety checker will be enabled. 
+- **Default**: true
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Prompt
+- **Type**: string
+- **Component**: input
+- **Required**: Yes
+- **Description**: The text prompt used to generate the image
+- **Default**: 
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Num Images
+- **Type**: integer
+- **Component**: slider
+- **Required**: No
+- **Description**: Number of times to retry generation with the prompt.
+- **Default**: 1
+- **Minimum**: 1
+- **Maximum**: 6
+
+
+
+### Image Size
+- **Type**: string
+- **Component**: select
+- **Required**: No
+- **Description**: The size of the generated image. Width and height must be between 512 and 4096.
+- **Default**: square_hd
+- **Minimum**: 0
+- **Maximum**: 0
+- **Options**: "square_hd,square,portrait_4_3,portrait_16_9,landscape_4_3,landscape_16_9"
+
+
+### Sync Mode
+- **Type**: boolean
+- **Component**: checkbox
+- **Required**: No
+- **Description**:  If set to true, the function will wait for the image to be generated and uploaded before returning the response. This will increase the latency of the function but it allows you to get the image directly in the response without going through the CDN.
+        
+- **Default**: False
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+### Seed
+- **Type**: integer
+- **Component**: input
+- **Required**: No
+- **Description**: Random seed to control the stochasticity of image generation.
+- **Default**: 
+- **Minimum**: 0
+- **Maximum**: 0
+
+
+
+## Pricing
+
+Pricing information not available for this model.
+
+
+## Documentation
+
+<p>Seedream v4 is a state-of-the-art text-to-image AI model developed by ByteDance, the company behind TikTok. Designed for rapid, high-resolution image generation, Seedream v4 (also referred to as Seedream 4.0) is positioned as a direct competitor to leading models such as Google’s Nano Banana and Gemini 2.5 Flash. The model is notable for its ability to generate ultra-realistic visuals, maintain consistent characters or objects across multiple scenes, and deliver outputs suitable for commercial and creative applications.</p>
+<p>Key features include support for 4K resolution, batch processing, and advanced multi-image input capabilities. Seedream v4 leverages a new architecture that enables fast inference—delivering high-definition images in seconds—and introduces multi-reference workflows, allowing users to upload several images to ensure visual consistency. The model excels in product photography, landscapes, anime, and advertising visuals, and is recognized for its strong prompt adherence, aesthetic quality, and versatility in both text-to-image and image-editing tasks. Its unique strengths include deep intent understanding, intelligent image composition, and robust subject consistency, making it a leading choice for professional content creation and brand asset generation.</p>
+
+### Technical Specifications
+<ul>
+<li>Architecture: Proprietary ByteDance architecture (details not fully disclosed), optimized for high-speed, high-resolution image synthesis</li>
+<li>Parameters: Not publicly disclosed</li>
+<li>Resolution: Supports up to 4K ultra-high-definition direct output; also optimized for 2K generation in under 2 seconds</li>
+<li>Input/Output formats: Accepts text prompts, single or multiple reference images; outputs high-resolution image files (common formats include PNG, JPEG)</li>
+<li>Performance metrics: Top rankings in internal and independent benchmarks (MagicBench, MagicArena, Artificial Analysis Text-to-Image and Image Editing Arena); up to 10x faster inference than previous versions; strong prompt adherence and subject consistency</li>
+</ul>
+
+### Key Considerations
+<ul>
+<li>Seedream v4 is optimized for both speed and quality, but 4K generation may require more computational resources</li>
+<li>Multi-image input and reference workflows are ideal for maintaining character or object consistency across scenes</li>
+<li>Best results are achieved with clear, descriptive prompts; the model is capable of interpreting vague instructions but benefits from specificity</li>
+<li>Batch processing is supported, enabling efficient generation of multiple images at once</li>
+<li>Prompt engineering can significantly influence output quality—iterative refinement is recommended for complex scenes</li>
+<li>The model’s advanced intent understanding allows for nuanced edits, insertions, and deletions directly from natural language prompts</li>
+<li>For commercial use, Seedream v4 addresses common issues like font rendering and visual redundancy, ensuring outputs are print-ready</li>
+</ul>
+
+### Capabilities
+<ul>
+<li>Generates ultra-high-resolution images up to 4K with strong visual fidelity</li>
+<li>Maintains consistent characters, objects, or styles across multiple scenes using multi-reference input</li>
+<li>Excels in product photography, landscapes, anime, advertising visuals, and complex image editing tasks</li>
+<li>Supports both text-to-image and image-to-image workflows, including compound editing and intelligent fusion of visual elements</li>
+<li>Delivers fast inference speeds, enabling near real-time generation for 2K images and rapid 4K output</li>
+<li>Deeply understands natural language prompts, including vague or complex instructions</li>
+<li>Produces outputs suitable for commercial use, with accurate text rendering and minimal visual artifacts</li>
+</ul>
+
+### Use Cases
+<ul>
+<li>Professional product photography and e-commerce catalog generation, ensuring consistent branding and high detail</li>
+<li>Advertising and marketing visuals, including rapid creation of campaign variants and print-ready assets</li>
+<li>Anime and illustration projects, with strong style consistency and character fidelity across scenes</li>
+<li>Landscape and concept art generation for creative industries, including gaming and film pre-visualization</li>
+<li>Business use cases such as automated brand kit creation, catalog updates, and scalable content production</li>
+<li>Personal creative projects, including character design, storyboarding, and social media content</li>
+<li>Industry-specific applications such as fashion lookbooks, architectural visualization, and editorial illustration</li>
+</ul>
+
+### Tips and Tricks
+<ul>
+<li>Use multi-image reference input to lock in character or product identity across a series of images</li>
+<li>For best prompt adherence, combine concise scene descriptions with style or mood keywords (e.g., “product photo, soft lighting, minimalist background”)</li>
+<li>When editing images, specify both the desired change and the context (e.g., “remove all ingredients from the burger, keep only the top and bottom buns, leave a gap between them”)</li>
+<li>For anime or stylized outputs, include genre-specific terms and reference images to guide the model’s style</li>
+<li>Leverage batch generation for A/B testing of creative concepts or ad variants</li>
+<li>Adjust aspect ratios and output sizes in the prompt to match specific use cases (e.g., banners, thumbnails, print assets)</li>
+<li>Iteratively refine prompts based on initial outputs—small changes in wording can yield significant improvements in detail and composition</li>
+</ul>
+
+### Things to Be Aware Of
+<ul>
+<li>Experimental features like multi-image fusion and advanced editing are powerful but may require prompt tuning for optimal results</li>
+<li>Some users report that the model’s speed at 4K resolution is highly dependent on hardware resources</li>
+<li>Community feedback highlights strong subject consistency, especially in batch and reference-based workflows</li>
+<li>Occasional quirks include over-smoothing in highly detailed scenes or minor artifacts in complex compositions</li>
+<li>Positive user reviews emphasize the realism and commercial-readiness of outputs, with many noting the difficulty in distinguishing Seedream images from real photos</li>
+<li>Negative feedback is rare but includes occasional prompt misinterpretation or less control over hyper-specific artistic styles compared to some niche models</li>
+<li>Resource requirements for high-speed, high-resolution generation may be significant, especially for batch processing at 4K</li>
+</ul>
+
+### Limitations
+<ul>
+<li>The underlying architecture and parameter count are not publicly disclosed, limiting transparency for some technical users</li>
+<li>May not be optimal for highly specialized artistic styles or extreme photorealism beyond standard commercial and creative needs</li>
+<li>4K generation and advanced multi-image workflows require substantial computational resources, which may limit accessibility for some users</li>
+</ul>
+
+
+## Example Usage
+
+```json
+{
+  "prompt": "Ultra-realistic cinematic photograph of a post-apocalyptic city street at dawn. In the foreground, a rusted abandoned bus with shattered windows lies half-buried in weeds, steam drifting from cracked asphalt. Skyscrapers in the background are partially collapsed, their steel frames exposed, covered with ivy and moss. A giant humanoid mech silhouette emerges faintly through the fog, towering over the ruined skyline. Golden morning light breaks through the mist, casting dramatic long shadows. Shot with Leica SL2, 35mm wide-angle lens, atmospheric photography.",
+  "image_size": "square_hd",
+  "num_images": 1,
+  "sync_mode": true,
+  "enable_safety_checker": true
+}
+```
+
+## Hardware Requirements
+
+
+## Related Models
+
+- [Wan | 2.5 | Preview | Text to Image](https://www.eachlabs.ai/ai-models/wan-2-5-preview-text-to-image) - Wan | 2.5 | Preview | Text to Image
+- [Hunyuan Image v3 | Text to Image](https://www.eachlabs.ai/ai-models/hunyuan-image-v3-text-to-image) - Hunyuan Image v3 | Text to Image
+- [Reve | Text to Image](https://www.eachlabs.ai/ai-models/reve-text-to-image) - Reve | Text to Image
+- [Seedream V3 | Text to Image](https://www.eachlabs.ai/ai-models/seedream-v3-text-to-image) - Seedream V3 | Text to Image
+
+## Support
+
+- [Eachlabs Documentation](https://www.eachlabs.ai/docs) - Platform documentation and guides
+- [API Reference](https://www.eachlabs.ai/api) - Complete API documentation
+- [Contact Support](https://www.eachlabs.ai/contact) - Get help with integration and usage
