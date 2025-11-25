@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { RainbowButton } from "@/components/ui/rainbow-button"
 import { LogoCarousel } from "@/components/landing/LogoCarousel"
 import { cn } from "@/lib/utils"
 
@@ -73,12 +72,12 @@ export function HeroSection() {
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
             >
-              <RainbowButton asChild className="h-12 px-8 text-base">
+              <Button asChild className="h-12 px-8 text-base shadow-[0_0_20px_rgba(168,85,247,0.5)] hover:shadow-[0_0_30px_rgba(168,85,247,0.7)] transition-shadow">
                 <Link href="/create">
                   Start Creating
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
-              </RainbowButton>
+              </Button>
 
               <Button variant="outline" className="h-12 px-8 text-base" asChild>
                 <Link href="#how-it-works">
