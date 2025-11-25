@@ -79,7 +79,7 @@
 - **Theme**: [next-themes](https://github.com/pacocoursey/next-themes)
 
 ### Developer Tools
-- **Package Manager**: [Bun](https://bun.sh/) (opsiyonel, npm/yarn/pnpm de kullanılabilir)
+- **Package Manager**: [Bun](https://bun.sh/) (ana paket yöneticisi)
 - **Linting**: [ESLint 9](https://eslint.org/)
 - **Build Tool**: Turbopack (Next.js dahili)
 
@@ -89,7 +89,7 @@
 
 ### Gereksinimler
 - Node.js 20.x veya üzeri
-- npm, yarn, pnpm veya bun
+- [Bun](https://bun.sh/docs/installation)
 
 ### Adım 1: Depoyu Klonlayın
 ```bash
@@ -99,29 +99,20 @@ cd eachlabs-ai-logo-maker-saas
 
 ### Adım 2: Bağımlılıkları Yükleyin
 ```bash
-# npm kullanarak
-npm install
-
-# veya yarn
-yarn install
-
-# veya pnpm
-pnpm install
-
-# veya bun
 bun install
 ```
 
 ### Adım 3: Ortam Değişkenlerini Ayarlayın
-`.env.local` dosyası oluşturun ve gerekli API anahtarlarını ekleyin:
+`.env.local` dosyası oluşturun ve gerekli değişkenleri ekleyin:
 ```bash
-# Eachlabs API anahtarınızı buraya ekleyin
+DATABASE_URL=postgres://user:pass@host:port/db
+DATABASE_SSL=true # opsiyonel, prod için önerilir
 EACHLABS_API_KEY=your_api_key_here
 ```
 
 ### Adım 4: Geliştirme Sunucusunu Başlatın
 ```bash
-npm run dev
+bun dev
 ```
 
 Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
@@ -153,16 +144,16 @@ Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
 
 ```bash
 # Geliştirme sunucusu (Turbopack ile)
-npm run dev
+bun dev
 
 # Production build
-npm run build
+bun run build
 
 # Production sunucusu
-npm run start
+bun start
 
 # Linting
-npm run lint
+bun lint
 ```
 
 ---
@@ -239,8 +230,8 @@ eachlabs-ai-logo-maker-saas/
 **Response:**
 ```typescript
 {
-  status: "pending" | "processing" | "success" | "failed";
-  output?: string[];     // Oluşturulan logo URL'leri (success durumunda)
+  status: "queued" | "running" | "succeeded" | "failed";
+  output?: string[];     // Oluşturulan logo URL'leri (succeeded durumunda)
 }
 ```
 
