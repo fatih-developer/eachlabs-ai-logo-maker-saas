@@ -4,20 +4,28 @@ import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-// Sample logo placeholders - in production these would be real logos
+// Extended sample logos with more variety - monochrome style
 const sampleLogos = [
-  { id: 1, name: "TechFlow", gradient: "from-blue-500 to-cyan-500" },
-  { id: 2, name: "Spark", gradient: "from-orange-500 to-red-500" },
-  { id: 3, name: "Nexus", gradient: "from-purple-500 to-pink-500" },
-  { id: 4, name: "Pulse", gradient: "from-green-500 to-emerald-500" },
-  { id: 5, name: "Nova", gradient: "from-violet-500 to-indigo-500" },
-  { id: 6, name: "Apex", gradient: "from-yellow-500 to-orange-500" },
-  { id: 7, name: "Drift", gradient: "from-teal-500 to-cyan-500" },
-  { id: 8, name: "Bloom", gradient: "from-pink-500 to-rose-500" },
-  { id: 9, name: "Orbit", gradient: "from-indigo-500 to-blue-500" },
-  { id: 10, name: "Flux", gradient: "from-emerald-500 to-teal-500" },
-  { id: 11, name: "Zenith", gradient: "from-rose-500 to-pink-500" },
-  { id: 12, name: "Prism", gradient: "from-cyan-500 to-blue-500" },
+  { id: 1, name: "TechFlow", icon: "T" },
+  { id: 2, name: "Spark", icon: "S" },
+  { id: 3, name: "Nexus", icon: "N" },
+  { id: 4, name: "Pulse", icon: "P" },
+  { id: 5, name: "Nova", icon: "✦" },
+  { id: 6, name: "Apex", icon: "A" },
+  { id: 7, name: "Drift", icon: "D" },
+  { id: 8, name: "Bloom", icon: "B" },
+  { id: 9, name: "Orbit", icon: "O" },
+  { id: 10, name: "Flux", icon: "F" },
+  { id: 11, name: "Zenith", icon: "Z" },
+  { id: 12, name: "Prism", icon: "◇" },
+  { id: 13, name: "Wave", icon: "W" },
+  { id: 14, name: "Helix", icon: "H" },
+  { id: 15, name: "Echo", icon: "E" },
+  { id: 16, name: "Vertex", icon: "V" },
+  { id: 17, name: "Luna", icon: "L" },
+  { id: 18, name: "Atlas", icon: "△" },
+  { id: 19, name: "Cipher", icon: "C" },
+  { id: 20, name: "Metro", icon: "M" },
 ]
 
 interface LogoCardProps {
@@ -41,7 +49,7 @@ function LogoCard({ logo, index }: LogoCardProps) {
   return (
     <motion.div
       ref={cardRef}
-      className="relative w-32 h-32 md:w-40 md:h-40 cursor-pointer"
+      className="relative w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false)
@@ -50,59 +58,57 @@ function LogoCard({ logo, index }: LogoCardProps) {
       onMouseMove={handleMouseMove}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05 }}
+      transition={{ delay: index * 0.02, duration: 0.3 }}
       style={{
-        perspective: "1000px",
+        perspective: "800px",
       }}
     >
       <motion.div
         className={cn(
           "w-full h-full rounded-2xl",
-          "bg-white/5 dark:bg-white/5 backdrop-blur-sm",
-          "border border-white/10 dark:border-white/10",
+          "bg-white/[0.03] dark:bg-white/[0.03]",
+          "border border-white/[0.08] dark:border-white/[0.08]",
           "flex items-center justify-center",
-          "transition-shadow duration-300",
-          isHovered && "shadow-xl shadow-primary/20"
+          "transition-all duration-300",
+          isHovered && "bg-white/[0.06] border-white/[0.15]"
         )}
         animate={{
-          rotateX: isHovered ? mousePosition.y * -20 : 0,
-          rotateY: isHovered ? mousePosition.x * 20 : 0,
-          scale: isHovered ? 1.05 : 1,
+          rotateX: isHovered ? mousePosition.y * -15 : 0,
+          rotateY: isHovered ? mousePosition.x * 15 : 0,
+          scale: isHovered ? 1.02 : 1,
         }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
         style={{
           transformStyle: "preserve-3d",
         }}
       >
-        {/* Logo Icon */}
+        {/* Logo Icon - monochrome */}
         <div
           className={cn(
-            "w-16 h-16 md:w-20 md:h-20 rounded-xl",
-            "bg-gradient-to-br",
-            logo.gradient,
+            "w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-xl",
+            "bg-gradient-to-br from-foreground/10 to-foreground/5",
+            "border border-foreground/10",
             "flex items-center justify-center",
-            "text-white font-bold text-2xl md:text-3xl",
-            "shadow-lg"
+            "text-foreground/70 font-semibold text-xl md:text-2xl",
+            "transition-all duration-300",
+            isHovered && "from-primary/20 to-primary/10 border-primary/20 text-primary"
           )}
           style={{
-            transform: isHovered ? "translateZ(30px)" : "translateZ(0px)",
-            transition: "transform 0.3s ease",
+            transform: isHovered ? "translateZ(20px)" : "translateZ(0px)",
+            transition: "transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, color 0.3s ease",
           }}
         >
-          {logo.name.charAt(0)}
+          {logo.icon}
         </div>
 
-        {/* Glow effect on hover */}
-        {isHovered && (
-          <div
-            className={cn(
-              "absolute inset-0 rounded-2xl opacity-50",
-              "bg-gradient-to-br",
-              logo.gradient,
-              "blur-xl -z-10"
-            )}
-          />
-        )}
+        {/* Subtle shine effect on hover */}
+        <div
+          className={cn(
+            "absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500",
+            "bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent",
+            isHovered && "opacity-100"
+          )}
+        />
       </motion.div>
     </motion.div>
   )
@@ -115,23 +121,21 @@ interface CarouselColumnProps {
 }
 
 function CarouselColumn({ logos, direction, speed = 25 }: CarouselColumnProps) {
-  const columnRef = useRef<HTMLDivElement>(null)
   const [isPaused, setIsPaused] = useState(false)
 
-  // Double the logos for seamless loop
-  const doubledLogos = [...logos, ...logos]
+  // Triple the logos for seamless loop
+  const tripledLogos = [...logos, ...logos, ...logos]
 
   return (
     <div
-      className="relative h-[500px] md:h-[600px] overflow-hidden"
+      className="relative h-[450px] md:h-[550px] lg:h-[600px] overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       <motion.div
-        ref={columnRef}
-        className="flex flex-col gap-4 md:gap-6"
+        className="flex flex-col gap-3 md:gap-4"
         animate={{
-          y: direction === "up" ? [0, -50 * logos.length * 2.5] : [-50 * logos.length * 2.5, 0],
+          y: direction === "up" ? [0, -33.33 * logos.length * 3.5] : [-33.33 * logos.length * 3.5, 0],
         }}
         transition={{
           y: {
@@ -145,7 +149,7 @@ function CarouselColumn({ logos, direction, speed = 25 }: CarouselColumnProps) {
           animationPlayState: isPaused ? "paused" : "running",
         }}
       >
-        {doubledLogos.map((logo, index) => (
+        {tripledLogos.map((logo, index) => (
           <LogoCard key={`${logo.id}-${index}`} logo={logo} index={index % logos.length} />
         ))}
       </motion.div>
@@ -161,38 +165,48 @@ export function LogoCarousel() {
   }, [])
 
   if (!mounted) {
-    return <div className="w-full h-[500px] md:h-[600px]" />
+    return <div className="w-full h-[450px] md:h-[550px] lg:h-[600px]" />
   }
 
-  // Split logos into 3 columns
+  // Split logos into 5 columns
   const column1 = sampleLogos.slice(0, 4)
   const column2 = sampleLogos.slice(4, 8)
   const column3 = sampleLogos.slice(8, 12)
+  const column4 = sampleLogos.slice(12, 16)
+  const column5 = sampleLogos.slice(16, 20)
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden">
       {/* Main carousel container with rotation */}
       <div
-        className="flex gap-4 md:gap-6 justify-center items-center"
+        className="flex gap-3 md:gap-4 justify-center items-center"
         style={{
-          transform: "rotate(-10deg) translateY(-20px)",
+          transform: "rotate(5deg) translateY(-20px)",
           transformOrigin: "center center",
         }}
       >
-        <CarouselColumn logos={column1} direction="down" speed={30} />
-        <CarouselColumn logos={column2} direction="up" speed={25} />
-        <CarouselColumn logos={column3} direction="down" speed={35} />
+        <div className="hidden sm:block">
+          <CarouselColumn logos={column1} direction="down" speed={35} />
+        </div>
+        <CarouselColumn logos={column2} direction="up" speed={28} />
+        <CarouselColumn logos={column3} direction="down" speed={32} />
+        <CarouselColumn logos={column4} direction="up" speed={26} />
+        <div className="hidden md:block">
+          <CarouselColumn logos={column5} direction="down" speed={30} />
+        </div>
       </div>
 
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none z-10" />
+      {/* Bottom gradient fade - stronger */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none z-10" />
 
       {/* Top gradient fade */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-background via-background/50 to-transparent pointer-events-none z-10" />
+      <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-background via-background/70 to-transparent pointer-events-none z-10" />
 
-      {/* Side fades for better blending */}
-      <div className="absolute top-0 left-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent pointer-events-none z-10" />
-      <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+      {/* Left fade */}
+      <div className="absolute top-0 left-0 bottom-0 w-24 md:w-32 bg-gradient-to-r from-background via-background/50 to-transparent pointer-events-none z-10" />
+
+      {/* Right fade */}
+      <div className="absolute top-0 right-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-background via-background/50 to-transparent pointer-events-none z-10" />
     </div>
   )
 }

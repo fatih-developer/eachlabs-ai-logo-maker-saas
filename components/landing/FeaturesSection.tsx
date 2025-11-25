@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
 import { Sparkles, Layers, Download, Palette, Zap, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -8,74 +9,199 @@ const features = [
   {
     icon: Sparkles,
     title: "AI-Powered Generation",
-    description: "Advanced AI models create unique, professional logos from simple text descriptions. No design expertise required.",
-    gradient: "from-blue-500 to-cyan-500",
+    description: "Advanced AI models create unique, professional logos from simple text descriptions.",
   },
   {
     icon: Layers,
     title: "Multiple AI Models",
     description: "Choose from different AI models optimized for various styles - minimalist, detailed, or artistic.",
-    gradient: "from-purple-500 to-pink-500",
   },
   {
     icon: Download,
     title: "Instant Downloads",
-    description: "Get your logos instantly in high-resolution PNG format, ready for app stores and websites.",
-    gradient: "from-orange-500 to-red-500",
+    description: "Get your logos instantly in high-resolution PNG format, ready for app stores.",
   },
   {
     icon: Palette,
     title: "Color Intelligence",
     description: "Specify your brand colors and watch AI incorporate them seamlessly into your design.",
-    gradient: "from-green-500 to-emerald-500",
   },
   {
     icon: Zap,
     title: "Lightning Fast",
-    description: "Generate professional logos in under 60 seconds. Iterate quickly until you find the perfect design.",
-    gradient: "from-yellow-500 to-orange-500",
+    description: "Generate professional logos in under 60 seconds. Iterate quickly until perfect.",
   },
   {
     icon: Shield,
     title: "Commercial Ready",
     description: "All generated logos are unique and ready for commercial use in your applications.",
-    gradient: "from-indigo-500 to-purple-500",
   },
 ]
 
+interface FeatureCardProps {
+  feature: typeof features[0]
+  index: number
+  isVisible: boolean
+}
+
+function FeatureCard({ feature, index, isVisible }: FeatureCardProps) {
+  const [isHovered, setIsHovered] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width - 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5
+    setMousePosition({ x, y })
+  }
+
+  return (
+    <motion.div
+      ref={cardRef}
+      className={cn(
+        "group relative cursor-pointer",
+        isVisible ? "opacity-100" : "opacity-0"
+      )}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false)
+        setMousePosition({ x: 0, y: 0 })
+      }}
+      onMouseMove={handleMouseMove}
+      style={{ perspective: "1000px" }}
+    >
+      <motion.div
+        className={cn(
+          "relative p-6 md:p-8 rounded-2xl h-full",
+          "bg-white/[0.02] dark:bg-white/[0.02]",
+          "border border-white/[0.05]",
+          "transition-colors duration-300",
+          isHovered && "bg-white/[0.04] border-white/[0.1]"
+        )}
+        animate={{
+          rotateX: isHovered ? mousePosition.y * -8 : 0,
+          rotateY: isHovered ? mousePosition.x * 8 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {/* Gradient spotlight effect */}
+        <div
+          className="absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 pointer-events-none"
+          style={{
+            opacity: isHovered ? 0.1 : 0,
+            background: `radial-gradient(circle at ${(mousePosition.x + 0.5) * 100}% ${(mousePosition.y + 0.5) * 100}%, var(--primary), transparent 50%)`,
+          }}
+        />
+
+        {/* Icon */}
+        <div
+          className={cn(
+            "inline-flex p-3 rounded-xl mb-4",
+            "bg-gradient-to-br from-primary/10 to-primary/5",
+            "border border-primary/10",
+            "transition-all duration-300",
+            isHovered && "from-primary/20 to-primary/10 border-primary/20"
+          )}
+          style={{
+            transform: isHovered ? "translateZ(20px)" : "translateZ(0)",
+            transition: "transform 0.3s ease",
+          }}
+        >
+          <feature.icon className={cn(
+            "h-6 w-6 text-primary/70 transition-colors duration-300",
+            isHovered && "text-primary"
+          )} />
+        </div>
+
+        {/* Content */}
+        <h3
+          className={cn(
+            "text-lg font-semibold mb-2 transition-colors duration-300",
+            isHovered && "text-primary"
+          )}
+          style={{
+            transform: isHovered ? "translateZ(15px)" : "translateZ(0)",
+            transition: "transform 0.3s ease",
+          }}
+        >
+          {feature.title}
+        </h3>
+        <p
+          className="text-muted-foreground text-sm leading-relaxed"
+          style={{
+            transform: isHovered ? "translateZ(10px)" : "translateZ(0)",
+            transition: "transform 0.3s ease",
+          }}
+        >
+          {feature.description}
+        </p>
+
+        {/* Corner accent */}
+        <div
+          className={cn(
+            "absolute top-4 right-4 w-8 h-8 transition-opacity duration-300",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+        >
+          <div className="absolute top-0 right-0 w-6 h-px bg-gradient-to-l from-primary/50 to-transparent" />
+          <div className="absolute top-0 right-0 w-px h-6 bg-gradient-to-b from-primary/50 to-transparent" />
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export function FeaturesSection() {
-  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set())
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          const index = itemRefs.current.indexOf(entry.target as HTMLDivElement)
-          if (entry.isIntersecting && index !== -1) {
-            setVisibleItems((prev) => new Set([...prev, index]))
-          }
-        })
+        if (entries[0].isIntersecting) {
+          setIsVisible(true)
+        }
       },
-      { threshold: 0.2, rootMargin: "0px 0px -50px 0px" }
+      { threshold: 0.1 }
     )
 
-    itemRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref)
-    })
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
 
     return () => observer.disconnect()
   }, [])
 
   return (
-    <section id="features" className="py-24 md:py-32 relative overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 dither-pattern-noise opacity-30" />
+    <section
+      id="features"
+      ref={sectionRef}
+      className="py-24 md:py-32 relative overflow-hidden"
+    >
+      {/* Connecting gradient from hero */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
+        backgroundSize: "60px 60px"
+      }} />
 
       <div className="container mx-auto px-4 relative">
         {/* Section header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium mb-6">
+        <motion.div
+          className="text-center max-w-3xl mx-auto mb-16 md:mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isVisible ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-sm font-medium mb-6 text-primary/80">
             Features
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
@@ -86,63 +212,23 @@ export function FeaturesSection() {
             Powerful features designed for developers and entrepreneurs who want
             professional results without the hassle.
           </p>
-        </div>
+        </motion.div>
 
         {/* Features grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {features.map((feature, index) => (
-            <div
+            <FeatureCard
               key={feature.title}
-              ref={(el) => { itemRefs.current[index] = el }}
-              className={cn(
-                "group relative p-6 md:p-8 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-500",
-                visibleItems.has(index)
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
-              )}
-              style={{ transitionDelay: `${index * 100}ms` }}
-            >
-              {/* Gradient background on hover */}
-              <div
-                className={cn(
-                  "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-5 transition-opacity duration-500 bg-gradient-to-br",
-                  feature.gradient
-                )}
-              />
-
-              {/* Icon */}
-              <div
-                className={cn(
-                  "inline-flex p-3 rounded-xl bg-gradient-to-br mb-4",
-                  feature.gradient
-                )}
-              >
-                <feature.icon className="h-6 w-6 text-white" />
-              </div>
-
-              {/* Content */}
-              <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
-
-              {/* Decorative corner */}
-              <div className="absolute top-4 right-4 w-16 h-16 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className={cn(
-                  "absolute top-0 right-0 w-8 h-px bg-gradient-to-l",
-                  feature.gradient
-                )} />
-                <div className={cn(
-                  "absolute top-0 right-0 w-px h-8 bg-gradient-to-b",
-                  feature.gradient
-                )} />
-              </div>
-            </div>
+              feature={feature}
+              index={index}
+              isVisible={isVisible}
+            />
           ))}
         </div>
       </div>
+
+      {/* Bottom connecting line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
     </section>
   )
 }

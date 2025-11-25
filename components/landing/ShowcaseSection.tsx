@@ -1,106 +1,210 @@
 "use client"
 
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const showcaseLogos = [
-  { id: 1, name: "Finance App", colors: ["#3b82f6", "#1d4ed8"], icon: "F" },
-  { id: 2, name: "Health Tracker", colors: ["#10b981", "#047857"], icon: "+" },
-  { id: 3, name: "Music Player", colors: ["#f43f5e", "#be123c"], icon: "►" },
-  { id: 4, name: "Task Manager", colors: ["#f59e0b", "#b45309"], icon: "✓" },
-  { id: 5, name: "Social Network", colors: ["#8b5cf6", "#6d28d9"], icon: "@" },
-  { id: 6, name: "E-commerce", colors: ["#14b8a6", "#0f766e"], icon: "$" },
-  { id: 7, name: "Weather App", colors: ["#0ea5e9", "#0369a1"], icon: "☀" },
-  { id: 8, name: "Fitness Coach", colors: ["#ef4444", "#b91c1c"], icon: "♥" },
+  { id: 1, name: "Finance App", icon: "F" },
+  { id: 2, name: "Health Tracker", icon: "+" },
+  { id: 3, name: "Music Player", icon: "►" },
+  { id: 4, name: "Task Manager", icon: "✓" },
+  { id: 5, name: "Social Network", icon: "@" },
+  { id: 6, name: "E-commerce", icon: "$" },
+  { id: 7, name: "Weather App", icon: "☀" },
+  { id: 8, name: "Fitness Coach", icon: "♥" },
 ]
 
-export function ShowcaseSection() {
-  const containerRef = useRef<HTMLDivElement>(null)
+interface ShowcaseCardProps {
+  logo: typeof showcaseLogos[0]
+  index: number
+  isVisible: boolean
+}
+
+function ShowcaseCard({ logo, index, isVisible }: ShowcaseCardProps) {
+  const [isHovered, setIsHovered] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width - 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5
+    setMousePosition({ x, y })
+  }
 
   return (
-    <section id="showcase" className="py-24 md:py-32 bg-background relative overflow-hidden [perspective:1000px]">
+    <motion.div
+      ref={cardRef}
+      className="group relative aspect-square cursor-pointer"
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={isVisible ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.08 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false)
+        setMousePosition({ x: 0, y: 0 })
+      }}
+      onMouseMove={handleMouseMove}
+      style={{ perspective: "1000px" }}
+    >
+      <motion.div
+        className={cn(
+          "w-full h-full rounded-2xl relative overflow-hidden",
+          "bg-white/[0.02]",
+          "border border-white/[0.05]",
+          "transition-colors duration-300",
+          isHovered && "bg-white/[0.04] border-white/[0.1]"
+        )}
+        animate={{
+          rotateX: isHovered ? mousePosition.y * -10 : 0,
+          rotateY: isHovered ? mousePosition.x * 10 : 0,
+          scale: isHovered ? 1.02 : 1,
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {/* Subtle gradient background */}
+        <div
+          className="absolute inset-0 opacity-0 transition-opacity duration-500"
+          style={{
+            opacity: isHovered ? 0.05 : 0,
+            background: `radial-gradient(circle at ${(mousePosition.x + 0.5) * 100}% ${(mousePosition.y + 0.5) * 100}%, var(--primary), transparent 60%)`,
+          }}
+        />
+
+        {/* The Logo */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div
+            className={cn(
+              "w-16 h-16 md:w-20 md:h-20 rounded-xl",
+              "bg-gradient-to-br from-foreground/10 to-foreground/5",
+              "border border-foreground/10",
+              "flex items-center justify-center",
+              "text-3xl md:text-4xl font-semibold text-foreground/60",
+              "transition-all duration-300",
+              isHovered && "from-primary/15 to-primary/5 border-primary/20 text-primary"
+            )}
+            style={{
+              transform: isHovered ? "translateZ(30px) scale(1.05)" : "translateZ(0) scale(1)",
+              transition: "transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, color 0.3s ease",
+            }}
+          >
+            {logo.icon}
+          </div>
+        </div>
+
+        {/* Shine effect */}
+        <div
+          className={cn(
+            "absolute inset-0 opacity-0 transition-opacity duration-500",
+            "bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent",
+            isHovered && "opacity-100"
+          )}
+        />
+      </motion.div>
+
+      {/* Label on hover */}
+      <motion.div
+        className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap"
+        initial={{ opacity: 0, y: -5 }}
+        animate={{
+          opacity: isHovered ? 1 : 0,
+          y: isHovered ? 8 : -5,
+        }}
+        transition={{ duration: 0.2 }}
+      >
+        <span className="text-xs font-medium text-muted-foreground">
+          {logo.name}
+        </span>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+export function ShowcaseSection() {
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setIsVisible(true)
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <section
+      id="showcase"
+      ref={sectionRef}
+      className="py-24 md:py-32 relative overflow-hidden"
+    >
+      {/* Ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="container mx-auto px-4 relative">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium mb-6">
+        {/* Section header */}
+        <motion.div
+          className="text-center max-w-3xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isVisible ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-sm font-medium mb-6 text-primary/80">
             Showcase
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
             Generated <span className="text-primary">Masterpieces</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            High-fidelity 3D exports ready for your production environment.
+            High-quality logos ready for your production environment.
           </p>
-        </div>
+        </motion.div>
 
-        {/* 3D Grid */}
-        <div
-          ref={containerRef}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 [perspective:1000px]"
-        >
-          {showcaseLogos.map((logo) => (
-            <div
+        {/* Logo Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto">
+          {showcaseLogos.map((logo, index) => (
+            <ShowcaseCard
               key={logo.id}
-              className="group relative aspect-square"
-            >
-              {/* 3D Card Container */}
-              <div className="w-full h-full relative transition-all duration-500 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(12deg)_rotateX(12deg)] group-hover:scale-105">
-
-                {/* Glass Layer */}
-                <div
-                  className="absolute inset-0 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl overflow-hidden"
-                  style={{
-                    boxShadow: `0 25px 50px -12px ${logo.colors[0]}40`,
-                  }}
-                >
-                  {/* Inner Gradient Blob */}
-                  <div
-                    className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] opacity-40 transition-transform duration-700 group-hover:rotate-45"
-                    style={{
-                      background: `conic-gradient(from 0deg, transparent, ${logo.colors[0]}, transparent, ${logo.colors[1]}, transparent)`
-                    }}
-                  />
-
-                  {/* The Logo Object (Simulated 3D) */}
-                  <div className="absolute inset-0 flex items-center justify-center [transform:translateZ(20px)]">
-                    <div
-                      className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white shadow-lg transition-transform duration-500 group-hover:[transform:translateZ(10px)] group-hover:scale-110"
-                      style={{
-                        background: `linear-gradient(135deg, ${logo.colors[0]}, ${logo.colors[1]})`,
-                        textShadow: "0 2px 10px rgba(0,0,0,0.3)"
-                      }}
-                    >
-                      {logo.icon}
-                    </div>
-                  </div>
-
-                  {/* Shine/Reflection effect */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 [transform:translateZ(30px)]" />
-                </div>
-              </div>
-
-              {/* Label on hover */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-bottom-8 transition-all duration-300">
-                <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  {logo.name}
-                </span>
-              </div>
-            </div>
+              logo={logo}
+              index={index}
+              isVisible={isVisible}
+            />
           ))}
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-muted-foreground mb-2">
-            Ready to create your own?
-          </p>
-          <a
+        <motion.div
+          className="text-center mt-16"
+          initial={{ opacity: 0 }}
+          animate={isVisible ? { opacity: 1 } : {}}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <Link
             href="/create"
-            className="text-primary font-medium hover:underline"
+            className="inline-flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all duration-300"
           >
-            Start generating logos →
-          </a>
-        </div>
+            Start generating logos
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </motion.div>
       </div>
+
+      {/* Bottom connector */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
     </section>
   )
 }

@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MessageSquare, Sparkles, Download, ArrowRight } from "lucide-react"
+import { motion } from "framer-motion"
+import { MessageSquare, Sparkles, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const steps = [
@@ -9,27 +10,155 @@ const steps = [
     number: "01",
     icon: MessageSquare,
     title: "Describe Your Vision",
-    description: "Enter your app name and describe what you want. Be as simple or detailed as you like - our AI understands natural language.",
-    gradient: "from-blue-500 to-cyan-500",
-    dither: "noise",
+    description: "Enter your app name and describe what you want. Be as simple or detailed as you like.",
   },
   {
     number: "02",
     icon: Sparkles,
     title: "AI Creates Magic",
-    description: "Our advanced AI models analyze your input and generate multiple unique logo options tailored to your brand.",
-    gradient: "from-purple-500 to-pink-500",
-    dither: "bayer",
+    description: "Our advanced AI models analyze your input and generate multiple unique logo options.",
   },
   {
     number: "03",
     icon: Download,
     title: "Download & Use",
-    description: "Pick your favorite, download in high resolution, and use it immediately in your app or website.",
-    gradient: "from-orange-500 to-red-500",
-    dither: "halftone",
+    description: "Pick your favorite, download in high resolution, and use it immediately.",
   },
 ]
+
+interface StepCardProps {
+  step: typeof steps[0]
+  index: number
+  isVisible: boolean
+  isActive: boolean
+  onClick: () => void
+}
+
+function StepCard({ step, index, isVisible, isActive, onClick }: StepCardProps) {
+  const [isHovered, setIsHovered] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const cardRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width - 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5
+    setMousePosition({ x, y })
+  }
+
+  return (
+    <motion.div
+      ref={cardRef}
+      className="relative cursor-pointer"
+      initial={{ opacity: 0, y: 30 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.15 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false)
+        setMousePosition({ x: 0, y: 0 })
+      }}
+      onMouseMove={handleMouseMove}
+      onClick={onClick}
+      style={{ perspective: "1000px" }}
+    >
+      {/* Step number badge */}
+      <div
+        className={cn(
+          "absolute -top-3 -left-3 w-10 h-10 rounded-full z-10",
+          "flex items-center justify-center text-sm font-bold",
+          "transition-all duration-300",
+          isActive
+            ? "bg-primary text-primary-foreground scale-110"
+            : "bg-white/[0.05] border border-white/[0.1] text-muted-foreground"
+        )}
+      >
+        {step.number}
+      </div>
+
+      <motion.div
+        className={cn(
+          "relative p-6 md:p-8 rounded-2xl h-full",
+          "bg-white/[0.02]",
+          "border transition-colors duration-300",
+          isActive ? "border-primary/30 bg-white/[0.04]" : "border-white/[0.05]",
+          isHovered && !isActive && "bg-white/[0.03] border-white/[0.08]"
+        )}
+        animate={{
+          rotateX: isHovered ? mousePosition.y * -6 : 0,
+          rotateY: isHovered ? mousePosition.x * 6 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        {/* Spotlight effect */}
+        <div
+          className="absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 pointer-events-none"
+          style={{
+            opacity: isHovered ? 0.08 : 0,
+            background: `radial-gradient(circle at ${(mousePosition.x + 0.5) * 100}% ${(mousePosition.y + 0.5) * 100}%, var(--primary), transparent 50%)`,
+          }}
+        />
+
+        {/* Icon */}
+        <div
+          className={cn(
+            "inline-flex p-3 rounded-xl mb-4",
+            "bg-gradient-to-br from-primary/10 to-primary/5",
+            "border border-primary/10",
+            "transition-all duration-300",
+            isActive && "from-primary/20 to-primary/10 border-primary/20"
+          )}
+          style={{
+            transform: isHovered ? "translateZ(15px)" : "translateZ(0)",
+            transition: "transform 0.3s ease",
+          }}
+        >
+          <step.icon className={cn(
+            "h-6 w-6 transition-colors duration-300",
+            isActive ? "text-primary" : "text-primary/70"
+          )} />
+        </div>
+
+        {/* Content */}
+        <h3
+          className={cn(
+            "text-lg font-semibold mb-2 transition-colors duration-300",
+            isActive && "text-primary"
+          )}
+          style={{
+            transform: isHovered ? "translateZ(10px)" : "translateZ(0)",
+            transition: "transform 0.3s ease",
+          }}
+        >
+          {step.title}
+        </h3>
+        <p
+          className="text-muted-foreground text-sm leading-relaxed"
+          style={{
+            transform: isHovered ? "translateZ(5px)" : "translateZ(0)",
+            transition: "transform 0.3s ease",
+          }}
+        >
+          {step.description}
+        </p>
+
+        {/* Progress bar for active step */}
+        {isActive && (
+          <div className="mt-4 h-0.5 rounded-full bg-white/[0.05] overflow-hidden">
+            <motion.div
+              className="h-full bg-primary/50"
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 4, ease: "linear" }}
+            />
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  )
+}
 
 export function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(0)
@@ -70,10 +199,21 @@ export function HowItWorksSection() {
       ref={sectionRef}
       className="py-24 md:py-32 relative overflow-hidden"
     >
-      <div className="container mx-auto px-4">
+      {/* Grid pattern */}
+      <div className="absolute inset-0 opacity-[0.015]" style={{
+        backgroundImage: `linear-gradient(var(--foreground) 1px, transparent 1px), linear-gradient(90deg, var(--foreground) 1px, transparent 1px)`,
+        backgroundSize: "80px 80px"
+      }} />
+
+      <div className="container mx-auto px-4 relative">
         {/* Section header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium mb-6">
+        <motion.div
+          className="text-center max-w-3xl mx-auto mb-16 md:mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isVisible ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-sm font-medium mb-6 text-primary/80">
             How It Works
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
@@ -83,78 +223,25 @@ export function HowItWorksSection() {
           <p className="text-lg text-muted-foreground">
             No complicated tools, no design skills needed. Just describe, generate, and download.
           </p>
-        </div>
+        </motion.div>
 
         {/* Steps */}
         <div className="max-w-5xl mx-auto">
           {/* Desktop layout */}
-          <div className="hidden md:grid md:grid-cols-3 gap-8">
+          <div className="hidden md:grid md:grid-cols-3 gap-6 lg:gap-8">
             {steps.map((step, index) => (
               <div key={step.number} className="relative">
                 {/* Connector line */}
                 {index < steps.length - 1 && (
-                  <div className="absolute top-12 left-full w-full h-px bg-border z-0 hidden lg:block">
-                    <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  </div>
+                  <div className="absolute top-1/2 left-full w-full h-px bg-gradient-to-r from-white/[0.1] to-transparent z-0 hidden lg:block -translate-y-1/2" />
                 )}
-
-                <div
-                  className={cn(
-                    "relative p-6 rounded-2xl border transition-all duration-500 cursor-pointer",
-                    activeStep === index
-                      ? "bg-card border-primary/50 shadow-lg shadow-primary/10"
-                      : "bg-card/50 border-border/50 hover:border-primary/30",
-                    isVisible
-                      ? "opacity-100 translate-y-0"
-                      : "opacity-0 translate-y-8"
-                  )}
-                  style={{ transitionDelay: `${index * 150}ms` }}
+                <StepCard
+                  step={step}
+                  index={index}
+                  isVisible={isVisible}
+                  isActive={activeStep === index}
                   onClick={() => setActiveStep(index)}
-                >
-                  {/* Step number */}
-                  <div
-                    className={cn(
-                      "absolute -top-4 -left-2 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300",
-                      activeStep === index
-                        ? "bg-primary text-primary-foreground scale-110"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {step.number}
-                  </div>
-
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      "inline-flex p-3 rounded-xl bg-gradient-to-br mb-4 transition-transform duration-300",
-                      step.gradient,
-                      activeStep === index ? "scale-110" : ""
-                    )}
-                  >
-                    <step.icon className="h-6 w-6 text-white" />
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {step.description}
-                  </p>
-
-                  {/* Progress bar for active step */}
-                  {activeStep === index && (
-                    <div className="mt-4 h-1 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full bg-gradient-to-r animate-progress",
-                          step.gradient
-                        )}
-                        style={{
-                          animation: "progress 4s linear",
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
+                />
               </div>
             ))}
           </div>
@@ -162,55 +249,21 @@ export function HowItWorksSection() {
           {/* Mobile layout */}
           <div className="md:hidden space-y-6">
             {steps.map((step, index) => (
-              <div
+              <StepCard
                 key={step.number}
-                className={cn(
-                  "relative p-6 rounded-2xl border bg-card transition-all duration-500",
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-8"
-                )}
-                style={{ transitionDelay: `${index * 150}ms` }}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      "flex-shrink-0 p-3 rounded-xl bg-gradient-to-br",
-                      step.gradient
-                    )}
-                  >
-                    <step.icon className="h-6 w-6 text-white" />
-                  </div>
-
-                  {/* Content */}
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Step {step.number}
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                step={step}
+                index={index}
+                isVisible={isVisible}
+                isActive={activeStep === index}
+                onClick={() => setActiveStep(index)}
+              />
             ))}
           </div>
         </div>
       </div>
 
-      {/* CSS for progress animation */}
-      <style jsx>{`
-        @keyframes progress {
-          from {
-            width: 0%;
-          }
-          to {
-            width: 100%;
-          }
-        }
-      `}</style>
+      {/* Bottom connector */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
     </section>
   )
 }
