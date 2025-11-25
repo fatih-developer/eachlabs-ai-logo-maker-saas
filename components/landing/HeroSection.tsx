@@ -8,15 +8,10 @@ import { Button } from "@/components/ui/button"
 import { RainbowButton } from "@/components/ui/rainbow-button"
 import { cn } from "@/lib/utils"
 
-// Dynamically import Three.js components to avoid SSR issues
-const DitherCanvas = dynamic(
-  () => import("@/components/three/DitherCanvas").then((mod) => mod.DitherCanvas),
-  { ssr: false }
-)
-
-const DitherScene = dynamic(
-  () => import("@/components/three/DitherScene").then((mod) => mod.DitherScene),
-  { ssr: false }
+// Import the new 3D scene
+const ModernLogoScene = dynamic(
+  () => import("@/components/three/ModernLogoScene").then((mod) => mod.ModernLogoScene),
+  { ssr: false, loading: () => <div className="w-full h-full bg-transparent" /> }
 )
 
 export function HeroSection() {
@@ -24,7 +19,6 @@ export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    // Trigger animations after mount
     const timer = setTimeout(() => setIsVisible(true), 100)
     return () => clearTimeout(timer)
   }, [])
@@ -32,32 +26,21 @@ export function HeroSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+      className="relative min-h-screen flex items-center overflow-hidden pt-20"
     >
-      {/* WebGL Background */}
-      <DitherCanvas className="absolute inset-0 -z-10">
-        <DitherScene
-          showLogo={true}
-          logoPosition={[2, 0.2, 0]}
-          logoScale={1.2}
-        />
-      </DitherCanvas>
+      {/* Background Gradients */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-900/20 via-background to-background" />
 
-      {/* Gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background pointer-events-none" />
-
-      {/* Content */}
-      <div className="container mx-auto px-4 py-20 md:py-32">
+      <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left side - Text content */}
-          <div className="space-y-8 text-center lg:text-left">
+
+          {/* Text Content */}
+          <div className="space-y-8 text-center lg:text-left pt-10 lg:pt-0">
             {/* Badge */}
             <div
               className={cn(
                 "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium transition-all duration-700",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
             >
               <span className="relative flex h-2 w-2">
@@ -71,9 +54,7 @@ export function HeroSection() {
             <h1
               className={cn(
                 "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight transition-all duration-700 delay-100",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
             >
               <span className="block">Create Stunning</span>
@@ -86,9 +67,7 @@ export function HeroSection() {
             <p
               className={cn(
                 "text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 transition-all duration-700 delay-200",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
             >
               Transform your ideas into professional, app-ready logos with the power of AI.
@@ -99,9 +78,7 @@ export function HeroSection() {
             <div
               className={cn(
                 "flex flex-col sm:flex-row gap-4 justify-center lg:justify-start transition-all duration-700 delay-300",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
             >
               <RainbowButton asChild className="h-12 px-8 text-base">
@@ -111,11 +88,7 @@ export function HeroSection() {
                 </Link>
               </RainbowButton>
 
-              <Button
-                variant="outline"
-                className="h-12 px-8 text-base"
-                asChild
-              >
+              <Button variant="outline" className="h-12 px-8 text-base" asChild>
                 <Link href="#how-it-works">
                   <Play className="mr-2 h-4 w-4" />
                   See How It Works
@@ -127,9 +100,7 @@ export function HeroSection() {
             <div
               className={cn(
                 "flex flex-wrap gap-8 justify-center lg:justify-start pt-4 transition-all duration-700 delay-400",
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
               )}
             >
               {[
@@ -145,8 +116,18 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right side - Space for 3D logo (handled by canvas) */}
-          <div className="hidden lg:block h-[500px]" />
+          {/* 3D Scene Area */}
+          <div
+            className={cn(
+              "h-[400px] md:h-[500px] lg:h-[600px] w-full relative transition-opacity duration-1000 delay-500",
+              isVisible ? "opacity-100" : "opacity-0"
+            )}
+          >
+            <ModernLogoScene />
+
+            {/* Glass Backdrop Effect behind the model for better integration */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-primary/20 blur-[100px] rounded-full -z-10" />
+          </div>
         </div>
       </div>
 
@@ -154,9 +135,7 @@ export function HeroSection() {
       <div
         className={cn(
           "absolute bottom-8 left-1/2 -translate-x-1/2 transition-all duration-700 delay-500",
-          isVisible
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-4"
+          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
       >
         <div className="flex flex-col items-center gap-2 text-muted-foreground">

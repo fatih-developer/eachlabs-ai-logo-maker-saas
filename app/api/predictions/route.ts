@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       console.error("Failed to persist generation request:", error)
     }
 
-    let input: any = {
+    let input: Record<string, unknown> = {
       prompt,
       num_images: outputCountValue,
       sync_mode: false,
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
       const providerPredictionId = prediction?.id ?? prediction?.prediction?.id ?? null
       const imagesCandidate = prediction?.output ?? prediction?.images
       const imageList = Array.isArray(imagesCandidate)
-        ? imagesCandidate.map((item: any) =>
+        ? imagesCandidate.map((item: unknown) =>
             typeof item === "string" ? item : JSON.stringify(item)
           )
         : []
