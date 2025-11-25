@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { eq } from "drizzle-orm"
 import { db } from "@/db"
 import { logoGenerations } from "@/db/schema"
@@ -11,12 +12,30 @@ const MODEL_MAP: Record<string, string> = {
   "reve-text": "reve-text-to-image",
 }
 
+const requestSchema = z.object({
+  appName: z.string().min(2),
+  appFocus: z.string().min(2),
+  color1: z.string().min(1),
+  color2: z.string().min(1),
+  model: z.enum(["nano-banana", "seedream-v4", "reve-text"]),
+  outputCount: z.union([z.string(), z.number()]).optional(),
+})
+
 export async function POST(req: Request) {
   let generationId: string | null = null
 
   try {
     const body = await req.json()
-    const { appName, appFocus, color1, color2, model, outputCount } = body
+    const parsedBody = requestSchema.safeParse(body)
+
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsedBody.error.format() },
+        { status: 400 }
+      )
+    }
+
+    const { appName, appFocus, color1, color2, model, outputCount } = parsedBody.data
 
     const apiKey = process.env.EACHLABS_API_KEY
 
@@ -35,7 +54,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const prompt = `iOS 16 uyumlu, minimalist ve modern bir uygulama simgesi taslağı oluşturun. Simge, yumuşak yuvarlak köşelere sahip kare bir arka plana sahip olmalı ve canlı ${color1} ile ${color2} renklerinden oluşan sofistike ve asimetrik coolwave bir degrade geçişi içermelidir. Merkeze yerleştirilmiş ${appFocus} temasını yansıtan ikon, sade, temiz ve kullanıcı dostu bir estetiğe sahip olmalı, zarif bir derinlik katmak için hafif gölge ve parlaklık efektleriyle desteklenmelidir. ${appName}'nin adını veya baş harflerini içeren metin, simgenin içinde veya yanında, şık ve yüksek okunabilirlik sağlayacak şekilde entegre edilmelidir. Tasarım, her boyutta netliğini ve tanınabilirliğini koruyarak ölçeklenebilir olmalıdır. Nihai sunum, beyaz, düz bir arka plan üzerinde yapılmalıdır.`
+    const prompt = `Design an iOS 16–ready, minimalist, and modern app icon for ${appName}. Use a softly rounded square background with a sophisticated gradient that blends ${color1} and ${color2}. Center a clean, easily recognizable symbol that represents ${appFocus}, with subtle depth via gentle shadow and light effects. If including text, weave the app name or initials in a sleek, highly legible way. The icon must remain crisp and recognizable at every size on a plain white background.`
 
     const parsedOutputCount = Number.parseInt(`${outputCount ?? 1}`, 10)
     const outputCountValue = Number.isFinite(parsedOutputCount)
