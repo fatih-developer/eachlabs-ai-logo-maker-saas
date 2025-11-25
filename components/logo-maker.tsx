@@ -18,7 +18,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,27 +31,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { RainbowButton } from "@/components/ui/rainbow-button"
 
 const formSchema = z.object({
   appName: z.string().min(2, {
-    message: "Uygulama adı en az 2 karakter olmalıdır.",
+    message: "App name must be at least 2 characters.",
   }),
   appFocus: z.string().min(3, {
-    message: "Uygulama odağı en az 3 karakter olmalıdır.",
+    message: "App focus must be at least 3 characters.",
   }),
   color1: z.string().min(2, {
-    message: "Lütfen bir renk giriniz.",
+    message: "Please enter a color.",
   }),
   color2: z.string().min(2, {
-    message: "Lütfen ikinci bir renk giriniz.",
+    message: "Please enter a second color.",
   }),
-  model: z.string({
-    required_error: "Lütfen bir model seçiniz.",
+  model: z.string({ message: "Please select a model." }).min(1, {
+    message: "Please select a model.",
   }),
-  outputCount: z.string({
-    required_error: "Lütfen çıktı sayısını seçiniz.",
+  outputCount: z.string({ message: "Please choose an output count." }).min(1, {
+    message: "Please choose an output count.",
   }),
 })
 
@@ -89,10 +87,10 @@ export function LogoMaker() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      appName: "Tuncer Kuruyemis",
-      appFocus: "Antep Fistigi",
-      color1: "Turkuaz",
-      color2: "Safir Yesil",
+      appName: "Acme Finance",
+      appFocus: "Rocket wallet",
+      color1: "Turquoise",
+      color2: "Emerald",
       model: "nano-banana",
       outputCount: "2",
     },
@@ -102,6 +100,8 @@ export function LogoMaker() {
     setIsLoading(true)
     setGeneratedImages([])
     setGenerationCount(parseInt(values.outputCount))
+    const startTime = Date.now()
+    const maxPollDurationMs = 5 * 60 * 1000
 
     try {
       const createRes = await fetch("/api/predictions", {
@@ -117,6 +117,12 @@ export function LogoMaker() {
       const { predictionID } = await createRes.json()
 
       while (true) {
+        if (Date.now() - startTime > maxPollDurationMs) {
+          console.error("Generation timed out after 5 minutes")
+          setIsLoading(false)
+          break
+        }
+
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
         const pollRes = await fetch(`/api/predictions/${predictionID}`)
@@ -147,9 +153,9 @@ export function LogoMaker() {
     <div className="w-full max-w-3xl mx-auto p-4">
       <Card className="shadow-xl border-0">
         <CardHeader className="space-y-1 pb-8">
-          <CardTitle className="text-xl font-bold">AI Logo Oluşturucu</CardTitle>
+          <CardTitle className="text-xl font-bold">AI Logo Maker</CardTitle>
           <CardDescription>
-            Uygulamanız için hızlı ve modern bir logo tasarlayın.
+            Quickly design a modern, app-store-ready logo.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -161,11 +167,11 @@ export function LogoMaker() {
                   name="appName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Uygulama Adı</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">App Name</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input 
-                            placeholder="Örn: FinansTakip" 
+                            placeholder="e.g. PixelPilot" 
                             {...field} 
                             className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
                           />
@@ -183,11 +189,11 @@ export function LogoMaker() {
                   name="appFocus"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Uygulama Odağı</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">App Focus</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input 
-                            placeholder="Örn: Uçan roket, Cüzdan" 
+                            placeholder="e.g. Flying rocket, Wallet" 
                             {...field} 
                             className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
                           />
@@ -205,11 +211,11 @@ export function LogoMaker() {
                   name="color1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Renk 1</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">Color 1</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Input 
-                            placeholder="Örn: Turkuaz" 
+                            placeholder="e.g. Turquoise" 
                             {...field} 
                             className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
                           />
@@ -228,11 +234,11 @@ export function LogoMaker() {
                   name="color2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Renk 2</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">Color 2</FormLabel>
                       <FormControl>
                          <div className="relative">
                           <Input 
-                            placeholder="Örn: Mor" 
+                            placeholder="e.g. Purple" 
                             {...field} 
                             className="pr-10 h-11 bg-background border-input/60 focus-visible:ring-1" 
                           />
@@ -258,7 +264,7 @@ export function LogoMaker() {
                       >
                         <FormControl>
                           <SelectTrigger className="h-11 bg-background border-input/60 focus:ring-1">
-                            <SelectValue placeholder="Model seçiniz" />
+                            <SelectValue placeholder="Select a model" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -278,21 +284,21 @@ export function LogoMaker() {
                   name="outputCount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold text-foreground/80">Çıktı Sayısı</FormLabel>
+                      <FormLabel className="font-semibold text-foreground/80">Output Count</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger className="h-11 bg-background border-input/60 focus:ring-1">
-                            <SelectValue placeholder="Sayı seçiniz" />
+                            <SelectValue placeholder="Select a count" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="1">1 Adet</SelectItem>
-                          <SelectItem value="2">2 Adet</SelectItem>
-                          <SelectItem value="3">3 Adet</SelectItem>
-                          <SelectItem value="4">4 Adet</SelectItem>
+                          <SelectItem value="1">1 Image</SelectItem>
+                          <SelectItem value="2">2 Images</SelectItem>
+                          <SelectItem value="3">3 Images</SelectItem>
+                          <SelectItem value="4">4 Images</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -305,12 +311,12 @@ export function LogoMaker() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Oluşturuluyor...
+                    Generating...
                   </>
                 ) : (
                   <>
                     <Wand2 className="mr-2 h-4 w-4" />
-                    Logo Oluştur
+                    Generate Logo
                   </>
                 )}
               </RainbowButton>
@@ -323,7 +329,7 @@ export function LogoMaker() {
           <CardFooter className="flex flex-col items-start gap-4 pt-8">
             <div className="w-full space-y-4">
               <h3 className="font-medium text-sm text-muted-foreground">
-                {isLoading ? "Oluşturuluyor..." : "Oluşturulan Logolar:"}
+                {isLoading ? "Generating..." : "Generated Logos:"}
               </h3>
 
               {isLoading ? (
@@ -349,7 +355,7 @@ export function LogoMaker() {
                         <Button variant="secondary" size="sm" className="rounded-full" asChild>
                           <a href={img} download target="_blank" rel="noopener noreferrer">
                             <Download className="mr-2 h-4 w-4" />
-                            İndir
+                            Download
                           </a>
                         </Button>
                       </div>
